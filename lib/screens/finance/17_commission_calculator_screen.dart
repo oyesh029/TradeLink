@@ -30,7 +30,16 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('17. Commission Calculator'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Commission Calculator'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

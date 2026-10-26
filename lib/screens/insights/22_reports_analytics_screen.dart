@@ -43,7 +43,16 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('22. Reports & Analytics'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Reports & Analytics'),
         actions: [
           IconButton(
             icon: const Icon(Icons.download_outlined),

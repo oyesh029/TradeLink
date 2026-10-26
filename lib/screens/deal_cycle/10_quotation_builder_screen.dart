@@ -110,7 +110,16 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('10. Quotation Builder'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Quotation Builder'),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf_outlined),

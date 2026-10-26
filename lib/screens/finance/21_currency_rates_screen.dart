@@ -27,7 +27,16 @@ class _CurrencyRatesScreenState extends State<CurrencyRatesScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('21. Currency Rates & Converter'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Currency Rates & FX'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

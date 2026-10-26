@@ -31,6 +31,15 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
         title: const Text('Supplier Directory'),
         actions: [
           IconButton(

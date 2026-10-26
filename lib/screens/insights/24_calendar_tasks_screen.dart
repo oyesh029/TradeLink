@@ -75,7 +75,16 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('24. Trade Calendar & Tasks'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Calendar & Tasks'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_task),

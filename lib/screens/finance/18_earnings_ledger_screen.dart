@@ -52,7 +52,16 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('18. Commission Earnings Ledger'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Earnings Ledger'),
         actions: [
           IconButton(
             icon: const Icon(Icons.file_download_outlined),

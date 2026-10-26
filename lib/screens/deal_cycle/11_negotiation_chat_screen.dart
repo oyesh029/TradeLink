@@ -43,10 +43,19 @@ class _NegotiationChatScreenState extends State<NegotiationChatScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('11. Deal Negotiation Chat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text('Deal Negotiation Chat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             Text('Al Noor Traders • Shenzhen Tech (RFQ-2041)', style: TextStyle(fontSize: 11, color: Color(0xFFCBD5E1))),
           ],
         ),

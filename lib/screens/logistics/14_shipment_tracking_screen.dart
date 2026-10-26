@@ -20,7 +20,16 @@ class _ShipmentTrackingScreenState extends State<ShipmentTrackingScreen> {
     return Scaffold(
       backgroundColor: AppColors.canvasLight,
       appBar: AppBar(
-        title: const Text('14. Container Shipment Tracking'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: const Text('Container Shipment Tracking'),
       ),
       body: Column(
         children: [

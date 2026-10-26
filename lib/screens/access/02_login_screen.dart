@@ -133,21 +133,56 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Role Quick-Switch Tabs
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildRoleTab('Broker', UserRole.agent),
-                      _buildRoleTab('Importer', UserRole.importer),
-                      _buildRoleTab('Exporter', UserRole.exporter),
-                      _buildRoleTab('Admin', UserRole.admin),
-                    ],
-                  ),
+                // Role Selection Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '1. Select Account Type',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.deepNavy,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.tealTint,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Select One',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // 3 Prominent Selectable Role Cards
+                _buildRoleCard(
+                  role: UserRole.agent,
+                  title: 'Commission Agent',
+                  subtitle: 'Licensed Trade Broker • Quotations & Deals',
+                  icon: Icons.business_center_rounded,
+                  badge: 'Full Access',
+                ),
+                const SizedBox(height: 8),
+                _buildRoleCard(
+                  role: UserRole.importer,
+                  title: 'Importer (Buyer)',
+                  subtitle: 'Al Noor Traders • RFQs, Escrow & Tracking',
+                  icon: Icons.shopping_bag_rounded,
+                  badge: 'Buyer Mode',
+                ),
+                const SizedBox(height: 8),
+                _buildRoleCard(
+                  role: UserRole.exporter,
+                  title: 'Exporter (Supplier)',
+                  subtitle: 'Shenzhen Tech Ltd • Catalog & Dispatch',
+                  icon: Icons.factory_rounded,
+                  badge: 'Supplier Mode',
                 ),
                 const SizedBox(height: 20),
 
@@ -169,18 +204,40 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '2. Sign In Credentials',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Any login enters',
+                              style: TextStyle(fontSize: 10, color: AppColors.textSecondaryLight),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
                       // Email Field
                       const Text(
                         'Email Address',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.mail_outline, size: 20, color: AppColors.textSecondaryLight),
-                          hintText: 'Enter your business email',
+                          hintText: 'Enter any email',
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -194,14 +251,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
 
                       // Password Field
                       const Text(
                         'Password',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -219,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               });
                             },
                           ),
-                          hintText: 'Enter password',
+                          hintText: 'Enter any password',
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -254,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(width: 8),
                               const Text(
                                 'Remember me',
-                                style: TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
+                                style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
                               ),
                             ],
                           ),
@@ -267,12 +324,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: const Text(
                               'Forgot password?',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.tradeTeal),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.tradeTeal),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
                       // Sign In Button
                       ElevatedButton(
@@ -283,12 +340,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        child: Text(
+                          _selectedRole == UserRole.agent
+                              ? 'Sign In as Commission Agent'
+                              : _selectedRole == UserRole.importer
+                                  ? 'Sign In as Importer'
+                                  : 'Sign In as Exporter',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
 
                       // Face ID / Biometrics & Google Button Row
                       Row(
@@ -359,48 +420,111 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRoleTab(String title, UserRole role) {
+  Widget _buildRoleCard({
+    required UserRole role,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required String badge,
+  }) {
     final isSelected = _selectedRole == role;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedRole = role;
-            if (role == UserRole.agent) {
-              _emailController.text = 'awais@tradelink.pk';
-            } else if (role == UserRole.importer) {
-              _emailController.text = 'ahmed@alnoor.ae';
-            } else if (role == UserRole.exporter) {
-              _emailController.text = 'sales@shenzhentech.cn';
-            } else {
-              _emailController.text = 'admin@tradelink.pk';
-            }
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    )
-                  ]
-                : null,
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedRole = role;
+          if (role == UserRole.agent) {
+            _emailController.text = 'awais@tradelink.pk';
+          } else if (role == UserRole.importer) {
+            _emailController.text = 'ahmed@alnoor.ae';
+          } else if (role == UserRole.exporter) {
+            _emailController.text = 'sales@shenzhentech.cn';
+          }
+        });
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? AppColors.tradeTeal : const Color(0xFFE2E8F0),
+            width: isSelected ? 2.0 : 1.0,
           ),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.deepNavy : AppColors.textSecondaryLight,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.tradeTeal.withValues(alpha: 0.12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.tealTint : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? AppColors.tradeTeal : AppColors.textSecondaryLight,
+                size: 22,
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: isSelected ? AppColors.deepNavy : const Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.tealTint : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          badge,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected ? AppColors.tradeTeal : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+              color: isSelected ? AppColors.tradeTeal : const Color(0xFFCBD5E1),
+              size: 22,
+            ),
+          ],
         ),
       ),
     );
