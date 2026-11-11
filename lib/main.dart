@@ -26,6 +26,12 @@ class _TradeLinkAppState extends State<TradeLinkApp> {
   final TradeState _tradeState = TradeState();
 
   @override
+  void initState() {
+    super.initState();
+    _tradeState.initDatabase();
+  }
+
+  @override
   void dispose() {
     _tradeState.dispose();
     super.dispose();

@@ -21,28 +21,34 @@ class _MainShellState extends State<MainShell> {
     ClientManagementScreen(),
     OrdersScreen(),
     ShipmentTrackingScreen(),
-    ModulesDirectorySheet(),
+    FinanceHubScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+            ),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) => setState(() => _currentIndex = index),
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.deepNavy,
-          unselectedItemColor: AppColors.textSecondaryLight,
+          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+          selectedItemColor: isDark ? AppColors.tradeTeal : AppColors.deepNavy,
+          unselectedItemColor: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
           selectedFontSize: 11,
           unselectedFontSize: 11,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -50,28 +56,28 @@ class _MainShellState extends State<MainShell> {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard, color: AppColors.deepNavy),
+              activeIcon: Icon(Icons.dashboard),
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people, color: AppColors.deepNavy),
+              activeIcon: Icon(Icons.people),
               label: 'Clients',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.fact_check_outlined),
-              activeIcon: Icon(Icons.fact_check, color: AppColors.deepNavy),
-              label: 'Orders',
+              icon: Icon(Icons.handshake_outlined),
+              activeIcon: Icon(Icons.handshake),
+              label: 'Deals',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.directions_boat_outlined),
-              activeIcon: Icon(Icons.directions_boat, color: AppColors.deepNavy),
-              label: 'Tracking',
+              activeIcon: Icon(Icons.directions_boat),
+              label: 'Logistics',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_outlined),
-              activeIcon: Icon(Icons.grid_view, color: AppColors.tradeTeal),
-              label: 'All 25 Modules',
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              activeIcon: Icon(Icons.account_balance_wallet),
+              label: 'Finance',
             ),
           ],
         ),

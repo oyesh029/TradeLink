@@ -3,6 +3,7 @@ import '../../models/trade_models.dart';
 import '../../theme/app_colors.dart';
 import '../deal_cycle/10_quotation_builder_screen.dart';
 import '../deal_cycle/11_negotiation_chat_screen.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class ClientProfileScreen extends StatefulWidget {
   final ClientModel client;
@@ -41,11 +42,13 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final client = widget.client;
+    final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: context.canvasColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -58,6 +61,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
         ),
         title: Text(client.companyName),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: const Icon(Icons.share_outlined),
             onPressed: () {},
@@ -73,7 +77,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
           return [
             SliverToBoxAdapter(
               child: Container(
-                color: Colors.white,
+                color: context.cardColor,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,16 +89,17 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: AppColors.deepNavy,
+                            color: isDark ? const Color(0xFF1E293B) : AppColors.deepNavy,
                             borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: isDark ? const Color(0xFF38BDF8) : Colors.transparent),
                           ),
                           child: Center(
                             child: Text(
                               client.companyName.substring(0, 2).toUpperCase(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                                color: isDark ? const Color(0xFF38BDF8) : Colors.white,
                               ),
                             ),
                           ),
@@ -109,10 +114,10 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                                   Flexible(
                                     child: Text(
                                       client.companyName,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.deepNavy,
+                                        color: context.textPrimary,
                                       ),
                                     ),
                                   ),
@@ -123,7 +128,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                               const SizedBox(height: 3),
                               Text(
                                 '${client.country} • ${client.role}',
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
+                                style: TextStyle(fontSize: 13, color: context.textSecondary),
                               ),
                             ],
                           ),
@@ -131,7 +136,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.greenTint,
+                            color: isDark ? AppColors.greenTint.withValues(alpha: 0.2) : AppColors.greenTint,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
@@ -151,18 +156,18 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.canvasLight,
+                        color: context.surfaceColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: context.borderColor),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildStatColumn('Total Deals', '${client.totalDeals} Deals'),
-                          Container(width: 1, height: 28, color: const Color(0xFFCBD5E1)),
-                          _buildStatColumn('Trade Volume', '\$${(client.tradeVolumeUsd / 1000).toStringAsFixed(0)}K'),
-                          Container(width: 1, height: 28, color: const Color(0xFFCBD5E1)),
-                          _buildStatColumn('Rating', '${client.rating} ★'),
+                          _buildStatColumn('Total Deals', '${client.totalDeals} Deals', context),
+                          Container(width: 1, height: 28, color: context.borderColor),
+                          _buildStatColumn('Trade Volume', '\$${(client.tradeVolumeUsd / 1000).toStringAsFixed(0)}K', context),
+                          Container(width: 1, height: 28, color: context.borderColor),
+                          _buildStatColumn('Rating', '${client.rating} ★', context),
                         ],
                       ),
                     ),
@@ -178,10 +183,11 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                                 SnackBar(content: Text('Dialing ${client.phone}...')),
                               );
                             },
-                            icon: const Icon(Icons.call_outlined, size: 18, color: AppColors.deepNavy),
-                            label: const Text('Call', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w700)),
+                            icon: Icon(Icons.call_outlined, size: 18, color: context.textPrimary),
+                            label: Text('Call', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 11),
+                              side: BorderSide(color: context.borderColor),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                           ),
@@ -195,10 +201,11 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                                 MaterialPageRoute(builder: (_) => const NegotiationChatScreen()),
                               );
                             },
-                            icon: const Icon(Icons.chat_bubble_outline, size: 18, color: AppColors.deepNavy),
-                            label: const Text('Message', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w700)),
+                            icon: Icon(Icons.chat_bubble_outline, size: 18, color: context.textPrimary),
+                            label: Text('Message', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 11),
+                              side: BorderSide(color: context.borderColor),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                           ),
@@ -216,6 +223,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                             label: const Text('New Deal', style: TextStyle(fontWeight: FontWeight.w700)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.tradeTeal,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 11),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
@@ -232,8 +240,8 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
               delegate: _SliverAppBarDelegate(
                 TabBar(
                   controller: _tabController,
-                  labelColor: AppColors.deepNavy,
-                  unselectedLabelColor: AppColors.textSecondaryLight,
+                  labelColor: isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy,
+                  unselectedLabelColor: context.textSecondary,
                   indicatorColor: AppColors.tradeTeal,
                   indicatorWeight: 3,
                   tabs: const [
@@ -243,6 +251,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                     Tab(text: 'Notes'),
                   ],
                 ),
+                context.cardColor,
               ),
             ),
           ];
@@ -262,6 +271,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                     {'label': 'Phone', 'value': client.phone},
                     {'label': 'Designation', 'value': 'Managing Director'},
                   ],
+                  context: context,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoCard(
@@ -272,6 +282,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                     {'label': 'Preferred Incoterm', 'value': 'CIF Dubai Port'},
                     {'label': 'KYC Verification', 'value': 'Verified • Active'},
                   ],
+                  context: context,
                 ),
               ],
             ),
@@ -280,9 +291,9 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
             ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildDealItem('ORD-5531', 'LED Panel Lights 40W (5,000 pcs)', '\$21,000', 'Processing'),
-                _buildDealItem('Q-1042', 'Power Banks & LED Fixtures (Quotation)', '\$42,385', 'Sent'),
-                _buildDealItem('ORD-5512', 'Industrial USB-C Cables (10,000 pcs)', '\$14,500', 'Delivered'),
+                _buildDealItem('ORD-5531', 'LED Panel Lights 40W (5,000 pcs)', '\$21,000', 'Processing', context),
+                _buildDealItem('Q-1042', 'Power Banks & LED Fixtures (Quotation)', '\$42,385', 'Sent', context),
+                _buildDealItem('ORD-5512', 'Industrial USB-C Cables (10,000 pcs)', '\$14,500', 'Delivered', context),
               ],
             ),
 
@@ -290,10 +301,10 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
             ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildDocItem('Commercial Invoice INV-2209.pdf', '240 KB • Approved', Icons.picture_as_pdf),
-                _buildDocItem('Bill of Lading BL-MSKU7781.pdf', '410 KB • Approved', Icons.description),
-                _buildDocItem('Certificate of Origin COO-5531.pdf', '320 KB • Verified', Icons.verified_user),
-                _buildDocItem('Trade License DED-882341.pdf', '1.2 MB • Verified', Icons.business),
+                _buildDocItem('Commercial Invoice INV-2209.pdf', '240 KB • Approved', Icons.picture_as_pdf, context),
+                _buildDocItem('Bill of Lading BL-MSKU7781.pdf', '410 KB • Approved', Icons.description, context),
+                _buildDocItem('Certificate of Origin COO-5531.pdf', '320 KB • Verified', Icons.verified_user, context),
+                _buildDocItem('Trade License DED-882341.pdf', '1.2 MB • Verified', Icons.business, context),
               ],
             ),
 
@@ -305,17 +316,19 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: context.borderColor),
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _noteController,
-                          decoration: const InputDecoration(
+                          style: TextStyle(fontSize: 13, color: context.textPrimary),
+                          decoration: InputDecoration(
                             hintText: 'Add a private interaction note...',
+                            hintStyle: TextStyle(fontSize: 13, color: context.textSecondary),
                             border: InputBorder.none,
                           ),
                         ),
@@ -332,9 +345,9 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: context.borderColor),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +357,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
                           Expanded(
                             child: Text(
                               note,
-                              style: const TextStyle(fontSize: 13, color: AppColors.deepNavy),
+                              style: TextStyle(fontSize: 13, color: context.textPrimary),
                             ),
                           ),
                         ],
@@ -358,42 +371,42 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
     );
   }
 
-  Widget _buildStatColumn(String label, String value) {
+  Widget _buildStatColumn(String label, String value, BuildContext context) {
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.textPrimary),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+          style: TextStyle(fontSize: 11, color: context.textSecondary),
         ),
       ],
     );
   }
 
-  Widget _buildInfoCard({required String title, required List<Map<String, String>> rows}) {
+  Widget _buildInfoCard({required String title, required List<Map<String, String>> rows, required BuildContext context}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.deepNavy)),
+          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.textPrimary)),
           const SizedBox(height: 12),
           ...rows.map((row) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(row['label']!, style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
-                    Text(row['value']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.deepNavy)),
+                    Text(row['label']!, style: TextStyle(fontSize: 12, color: context.textSecondary)),
+                    Text(row['value']!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.textPrimary)),
                   ],
                 ),
               )),
@@ -402,14 +415,14 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
     );
   }
 
-  Widget _buildDealItem(String code, String summary, String amount, String status) {
+  Widget _buildDealItem(String code, String summary, String amount, String status, BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -417,9 +430,9 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(code, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+              Text(code, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: context.textPrimary)),
               const SizedBox(height: 3),
-              Text(summary, style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
+              Text(summary, style: TextStyle(fontSize: 12, color: context.textSecondary)),
             ],
           ),
           Column(
@@ -435,14 +448,14 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
     );
   }
 
-  Widget _buildDocItem(String name, String meta, IconData icon) {
+  Widget _buildDocItem(String name, String meta, IconData icon, BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Row(
         children: [
@@ -452,13 +465,13 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy)),
+                Text(name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.textPrimary)),
                 const SizedBox(height: 2),
-                Text(meta, style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+                Text(meta, style: TextStyle(fontSize: 11, color: context.textSecondary)),
               ],
             ),
           ),
-          const Icon(Icons.download_outlined, color: AppColors.textSecondaryLight, size: 20),
+          Icon(Icons.download_outlined, color: context.textSecondary, size: 20),
         ],
       ),
     );
@@ -466,8 +479,9 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> with SingleTi
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
+  _SliverAppBarDelegate(this._tabBar, this.backgroundColor);
   final TabBar _tabBar;
+  final Color backgroundColor;
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
@@ -477,13 +491,13 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: backgroundColor,
       child: _tabBar,
     );
   }
 
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+    return oldDelegate.backgroundColor != backgroundColor;
   }
 }

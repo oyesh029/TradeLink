@@ -3,6 +3,7 @@ import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
 import '11_negotiation_chat_screen.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class QuotationBuilderScreen extends StatefulWidget {
   const QuotationBuilderScreen({super.key});
@@ -16,15 +17,23 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
   int _validityDays = 15;
   double _commissionPct = 3.0;
 
-  void _showPdfPreview(QuotationModel q) {
+  void _showPdfPreview(QuotationModel q, bool isDark) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.cardDark : Colors.white,
         title: Row(
           children: [
             const Icon(Icons.picture_as_pdf, color: AppColors.alertRed, size: 24),
             const SizedBox(width: 8),
-            Text('Proforma Quotation ${q.quotationNumber}'),
+            Text(
+              'Proforma Quotation ${q.quotationNumber}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -32,30 +41,61 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Client: ${q.clientName}', style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text('Terms: ${q.incoterm} • Validity: ${q.validityDays} Days', style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
-              const Divider(height: 20),
+              Text(
+                'Client: ${q.clientName}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+                ),
+              ),
+              Text(
+                'Terms: ${q.incoterm} • Validity: ${q.validityDays} Days',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+              ),
+              Divider(height: 20, color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
               ...q.items.map((i) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${i.quantity}x ${i.title}', style: const TextStyle(fontSize: 12)),
-                        Text('\$${i.lineTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text(
+                          '${i.quantity}x ${i.title}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+                          ),
+                        ),
+                        Text(
+                          '\$${i.lineTotal.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+                          ),
+                        ),
                       ],
                     ),
                   )),
-              const Divider(height: 16),
-              _buildCalcRow('Subtotal', '\$${q.subtotal.toStringAsFixed(2)}'),
-              _buildCalcRow('Freight & Marine Insurance', '\$${q.freightInsurance.toStringAsFixed(2)}'),
-              _buildCalcRow('Agent Commission (${_commissionPct.toStringAsFixed(1)}%)', '\$${q.commissionAmount.toStringAsFixed(2)}', highlight: true),
-              const Divider(height: 16),
-              _buildCalcRow('Grand Total', '\$${q.grandTotal.toStringAsFixed(2)}', bold: true),
+              Divider(height: 16, color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
+              _buildCalcRow('Subtotal', '\$${q.subtotal.toStringAsFixed(2)}', isDark: isDark),
+              _buildCalcRow('Freight & Marine Insurance', '\$${q.freightInsurance.toStringAsFixed(2)}', isDark: isDark),
+              _buildCalcRow('Agent Commission (${_commissionPct.toStringAsFixed(1)}%)', '\$${q.commissionAmount.toStringAsFixed(2)}', highlight: true, isDark: isDark),
+              Divider(height: 16, color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
+              _buildCalcRow('Grand Total', '\$${q.grandTotal.toStringAsFixed(2)}', bold: true, isDark: isDark),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Edit')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Edit',
+              style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.deepNavy),
+            ),
+          ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(ctx);
@@ -67,6 +107,10 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                 ),
               );
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.tradeTeal,
+              foregroundColor: Colors.white,
+            ),
             icon: const Icon(Icons.send, size: 16),
             label: const Text('Dispatch to Chat'),
           ),
@@ -75,7 +119,7 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
     );
   }
 
-  Widget _buildCalcRow(String label, String value, {bool highlight = false, bool bold = false}) {
+  Widget _buildCalcRow(String label, String value, {bool highlight = false, bool bold = false, bool isDark = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -86,7 +130,9 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-              color: highlight ? AppColors.tradeTeal : AppColors.textPrimaryLight,
+              color: highlight
+                  ? AppColors.tradeTeal
+                  : (isDark ? AppColors.textSecondaryDark : AppColors.textPrimaryLight),
             ),
           ),
           Text(
@@ -94,7 +140,9 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             style: TextStyle(
               fontSize: bold ? 14 : 12,
               fontWeight: bold ? FontWeight.w800 : FontWeight.w700,
-              color: highlight ? AppColors.tradeTeal : AppColors.deepNavy,
+              color: highlight
+                  ? AppColors.tradeTeal
+                  : (isDark ? AppColors.textPrimaryDark : AppColors.deepNavy),
             ),
           ),
         ],
@@ -106,9 +154,10 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
     final quote = state.currentQuotation;
+    final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: context.canvasColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -121,10 +170,11 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
         ),
         title: const Text('Quotation Builder'),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf_outlined),
             tooltip: 'Preview PDF',
-            onPressed: () => _showPdfPreview(quote),
+            onPressed: () => _showPdfPreview(quote, isDark),
           ),
         ],
       ),
@@ -137,9 +187,9 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,18 +202,18 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                         children: [
                           Text(
                             quote.quotationNumber,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.textPrimary),
                           ),
                           Text(
                             'Linked to ${quote.rfqNumber}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                            style: TextStyle(fontSize: 11, color: context.textSecondary),
                           ),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.tealTint,
+                          color: isDark ? AppColors.tradeTeal.withValues(alpha: 0.2) : AppColors.tealTint,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -174,7 +224,7 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: context.borderColor),
                   const SizedBox(height: 14),
 
                   // Incoterm & Validity Selectors
@@ -183,17 +233,24 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           initialValue: _selectedIncoterm,
-                          decoration: const InputDecoration(
+                          dropdownColor: context.cardColor,
+                          style: TextStyle(fontSize: 13, color: context.textPrimary),
+                          decoration: InputDecoration(
                             labelText: 'Incoterm 2020',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            labelStyle: TextStyle(fontSize: 12, color: context.textSecondary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: context.borderColor),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'CIF Dubai Port', child: Text('CIF Dubai')),
-                            DropdownMenuItem(value: 'FOB Karachi Port', child: Text('FOB Karachi')),
-                            DropdownMenuItem(value: 'CFR Hamburg', child: Text('CFR Hamburg')),
-                            DropdownMenuItem(value: 'EXW Shenzhen', child: Text('EXW Shenzhen')),
-                            DropdownMenuItem(value: 'DDP Riyadh', child: Text('DDP Riyadh')),
+                          items: [
+                            DropdownMenuItem(value: 'CIF Dubai Port', child: Text('CIF Dubai', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 'FOB Karachi Port', child: Text('FOB Karachi', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 'CFR Hamburg', child: Text('CFR Hamburg', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 'EXW Shenzhen', child: Text('EXW Shenzhen', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 'DDP Riyadh', child: Text('DDP Riyadh', style: TextStyle(color: context.textPrimary))),
                           ],
                           onChanged: (val) => setState(() => _selectedIncoterm = val!),
                         ),
@@ -202,15 +259,22 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                       Expanded(
                         child: DropdownButtonFormField<int>(
                           initialValue: _validityDays,
-                          decoration: const InputDecoration(
+                          dropdownColor: context.cardColor,
+                          style: TextStyle(fontSize: 13, color: context.textPrimary),
+                          decoration: InputDecoration(
                             labelText: 'Offer Validity',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            labelStyle: TextStyle(fontSize: 12, color: context.textSecondary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: context.borderColor),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 7, child: Text('7 Days')),
-                            DropdownMenuItem(value: 15, child: Text('15 Days')),
-                            DropdownMenuItem(value: 30, child: Text('30 Days')),
+                          items: [
+                            DropdownMenuItem(value: 7, child: Text('7 Days', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 15, child: Text('15 Days', style: TextStyle(color: context.textPrimary))),
+                            DropdownMenuItem(value: 30, child: Text('30 Days', style: TextStyle(color: context.textPrimary))),
                           ],
                           onChanged: (val) => setState(() => _validityDays = val!),
                         ),
@@ -226,9 +290,9 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Quotation Line Items',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimary),
                 ),
                 TextButton.icon(
                   onPressed: () {
@@ -238,8 +302,8 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                       );
                     });
                   },
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add Row'),
+                  icon: const Icon(Icons.add, size: 16, color: AppColors.tradeTeal),
+                  label: const Text('Add Row', style: TextStyle(color: AppColors.tradeTeal, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
@@ -247,15 +311,15 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
 
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: quote.items.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => Divider(height: 1, color: context.borderColor),
                 itemBuilder: (context, index) {
                   final item = quote.items[index];
                   return Padding(
@@ -267,10 +331,10 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy)),
+                              Text(item.title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.textPrimary)),
                               const SizedBox(height: 2),
                               Text('${item.quantity} units @ \$${item.unitPrice.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+                                  style: TextStyle(fontSize: 11, color: context.textSecondary)),
                             ],
                           ),
                         ),
@@ -279,7 +343,7 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                           child: Text(
                             '\$${item.lineTotal.toStringAsFixed(2)}',
                             textAlign: TextAlign.end,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: context.textPrimary),
                           ),
                         ),
                       ],
@@ -294,18 +358,18 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Automatic Financial Computation',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.deepNavy)),
+                  Text('Automatic Financial Computation',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.textPrimary)),
                   const SizedBox(height: 12),
-                  _buildCalcRow('Subtotal', '\$${quote.subtotal.toStringAsFixed(2)}'),
-                  _buildCalcRow('Freight & Marine Insurance', '\$${quote.freightInsurance.toStringAsFixed(2)}'),
+                  _buildCalcRow('Subtotal', '\$${quote.subtotal.toStringAsFixed(2)}', isDark: isDark),
+                  _buildCalcRow('Freight & Marine Insurance', '\$${quote.freightInsurance.toStringAsFixed(2)}', isDark: isDark),
                   const SizedBox(height: 8),
 
                   // Commission Slider
@@ -330,14 +394,14 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
                     },
                   ),
 
-                  const Divider(height: 18),
+                  Divider(height: 18, color: context.borderColor),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Grand Total (USD)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+                      Text('Grand Total (USD)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.textPrimary)),
                       Text(
                         '\$${(quote.subtotal + quote.freightInsurance + (quote.subtotal * (_commissionPct / 100))).toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy),
                       ),
                     ],
                   ),
@@ -348,9 +412,10 @@ class _QuotationBuilderScreenState extends State<QuotationBuilderScreen> {
 
             // Generate PDF Action
             ElevatedButton.icon(
-              onPressed: () => _showPdfPreview(quote),
+              onPressed: () => _showPdfPreview(quote, isDark),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: isDark ? AppColors.tradeTeal : AppColors.deepNavy,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

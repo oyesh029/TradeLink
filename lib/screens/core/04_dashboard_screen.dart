@@ -2,29 +2,14 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
-import '../access/01_splash_screen.dart';
-import '../access/02_login_screen.dart';
-import '../access/03_registration_screen.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '05_client_management_screen.dart';
-import '06_client_profile_screen.dart';
-import '07_supplier_directory_screen.dart';
-import '08_product_catalog_screen.dart';
-import '../deal_cycle/09_inquiries_rfq_screen.dart';
 import '../deal_cycle/10_quotation_builder_screen.dart';
-import '../deal_cycle/11_negotiation_chat_screen.dart';
-import '../deal_cycle/12_orders_screen.dart';
 import '../deal_cycle/13_order_details_screen.dart';
 import '../logistics/14_shipment_tracking_screen.dart';
-import '../logistics/15_documents_screen.dart';
-import '../logistics/16_customs_hs_screen.dart';
 import '../finance/17_commission_calculator_screen.dart';
-import '../finance/18_earnings_ledger_screen.dart';
-import '../finance/19_invoices_screen.dart';
-import '../finance/20_payments_screen.dart';
 import '../finance/21_currency_rates_screen.dart';
-import '../insights/22_reports_analytics_screen.dart';
 import '../insights/23_notifications_screen.dart';
-import '../insights/24_calendar_tasks_screen.dart';
 import '../insights/25_settings_profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -35,306 +20,87 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _selectedCategory = 'All';
-  String _searchModuleQuery = '';
+  String _selectedGrowthPeriod = '6M';
+  int _selectedMonthIndex = 5; // Default to latest month (Oct)
+  String _selectedActivityFilter = 'All';
+
+  final List<Map<String, dynamic>> _monthlyData = [
+    {'month': 'May', 'factor': 0.50, 'value': '\$6,200', 'deals': 14, 'volume': '\$248K'},
+    {'month': 'Jun', 'factor': 0.65, 'value': '\$8,100', 'deals': 18, 'volume': '\$324K'},
+    {'month': 'Jul', 'factor': 0.60, 'value': '\$7,400', 'deals': 16, 'volume': '\$296K'},
+    {'month': 'Aug', 'factor': 0.78, 'value': '\$9,800', 'deals': 21, 'volume': '\$392K'},
+    {'month': 'Sep', 'factor': 0.86, 'value': '\$10,800', 'deals': 23, 'volume': '\$432K'},
+    {'month': 'Oct', 'factor': 1.00, 'value': '\$12,430', 'deals': 26, 'volume': '\$497K'},
+  ];
 
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
     final user = state.currentUser;
+    final primaryOrder = state.orders.isNotEmpty ? state.orders.first : null;
+    final activeShipment = state.activeShipment;
 
-    // Build the master list of all 25 modules
-    final allModules = [
-      _ModuleItem(
-        num: '01',
-        title: 'Splash Screen',
-        category: 'Access & Onboarding',
-        desc: 'Animated branding, token check & startup sequence',
-        icon: Icons.launch_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const SplashScreen(),
-      ),
-      _ModuleItem(
-        num: '02',
-        title: 'Login & Authentication',
-        category: 'Access & Onboarding',
-        desc: 'Role switcher (Agent / Importer / Exporter) & Biometric Face ID',
-        icon: Icons.lock_open_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const LoginScreen(),
-      ),
-      _ModuleItem(
-        num: '03',
-        title: 'User Registration',
-        category: 'Access & Onboarding',
-        desc: 'Onboard broker agency or corporate trading entity',
-        icon: Icons.person_add_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const RegistrationScreen(),
-      ),
-      _ModuleItem(
-        num: '05',
-        title: 'Client Management',
-        category: 'Core Business',
-        desc: 'Buyer & seller directory, KYC status, trade volume & + Add Client',
-        icon: Icons.people_alt_rounded,
-        iconColor: AppColors.tradeTeal,
-        tint: AppColors.tealTint,
-        builder: (_) => const ClientManagementScreen(),
-      ),
-      _ModuleItem(
-        num: '06',
-        title: 'Client Profile (360°)',
-        category: 'Core Business',
-        desc: 'Al Noor Traders 360° dossier, notes tab, deals & paperwork',
-        icon: Icons.badge_rounded,
-        iconColor: AppColors.tradeTeal,
-        tint: AppColors.tealTint,
-        builder: (ctx) => ClientProfileScreen(client: state.clients.first),
-      ),
-      _ModuleItem(
-        num: '07',
-        title: 'Supplier Directory & Map',
-        category: 'Core Business',
-        desc: 'Verified manufacturers, factory audits & GPS map coordinates',
-        icon: Icons.storefront_rounded,
-        iconColor: AppColors.tradeTeal,
-        tint: AppColors.tealTint,
-        builder: (_) => const SupplierDirectoryScreen(),
-      ),
-      _ModuleItem(
-        num: '08',
-        title: 'Product Catalog',
-        category: 'Core Business',
-        desc: 'Commodity items, HS code tags, MOQ & "+ Add to Quote"',
-        icon: Icons.inventory_2_rounded,
-        iconColor: AppColors.tradeTeal,
-        tint: AppColors.tealTint,
-        builder: (_) => const ProductCatalogScreen(),
-      ),
-      _ModuleItem(
-        num: '09',
-        title: 'Inquiries & RFQ Pipeline',
-        category: 'Deal Cycle',
-        desc: 'Open buyer requests, urgency timers & Quotation triggers',
-        icon: Icons.mark_email_unread_rounded,
-        iconColor: AppColors.gold,
-        tint: AppColors.goldTint,
-        builder: (_) => const InquiriesRfqScreen(),
-      ),
-      _ModuleItem(
-        num: '10',
-        title: 'Quotation Builder (Q-1042)',
-        category: 'Deal Cycle',
-        desc: 'Incoterms 2020 (CIF/FOB), automated freight & commission PDF generator',
-        icon: Icons.calculate_rounded,
-        iconColor: AppColors.gold,
-        tint: AppColors.goldTint,
-        builder: (_) => const QuotationBuilderScreen(),
-      ),
-      _ModuleItem(
-        num: '11',
-        title: 'Deal Negotiation Chat',
-        category: 'Deal Cycle',
-        desc: 'Buyer-Seller-Broker live chat with interactive Counter-Offer cards',
-        icon: Icons.chat_rounded,
-        iconColor: AppColors.gold,
-        tint: AppColors.goldTint,
-        builder: (_) => const NegotiationChatScreen(),
-      ),
-      _ModuleItem(
-        num: '12',
-        title: 'Confirmed Orders',
-        category: 'Deal Cycle',
-        desc: 'ORD-5531 to ORD-5521 trade contracts, milestones & progress bars',
-        icon: Icons.fact_check_rounded,
-        iconColor: AppColors.gold,
-        tint: AppColors.goldTint,
-        builder: (_) => const OrdersScreen(),
-      ),
-      _ModuleItem(
-        num: '13',
-        title: 'Order Details & Execution',
-        category: 'Deal Cycle',
-        desc: 'Mandatory 6-stage order timeline & live shipment linking',
-        icon: Icons.assignment_turned_in_rounded,
-        iconColor: AppColors.gold,
-        tint: AppColors.goldTint,
-        builder: (ctx) => OrderDetailsScreen(order: state.orders.first),
-      ),
-      _ModuleItem(
-        num: '14',
-        title: 'Container Shipment Tracking',
-        category: 'Logistics & Compliance',
-        desc: 'Interactive sea route map (Karachi -> Jebel Ali), vessel GPS & ETA',
-        icon: Icons.directions_boat_rounded,
-        iconColor: AppColors.oceanBlue,
-        tint: AppColors.blueTint,
-        builder: (_) => const ShipmentTrackingScreen(),
-      ),
-      _ModuleItem(
-        num: '15',
-        title: 'Trade Documents Vault',
-        category: 'Logistics & Compliance',
-        desc: 'Invoices, B/L, packing lists, LC MT700, verify/reject & camera scanner',
-        icon: Icons.folder_shared_rounded,
-        iconColor: AppColors.oceanBlue,
-        tint: AppColors.blueTint,
-        builder: (_) => const DocumentsScreen(),
-      ),
-      _ModuleItem(
-        num: '16',
-        title: 'Customs & HS Code Tariff',
-        category: 'Logistics & Compliance',
-        desc: 'HS 9405.42 verification, import duty breakdowns & 5-point checklist',
-        icon: Icons.policy_rounded,
-        iconColor: AppColors.oceanBlue,
-        tint: AppColors.blueTint,
-        builder: (_) => const CustomsHsScreen(),
-      ),
-      _ModuleItem(
-        num: '17',
-        title: 'Commission Calculator',
-        category: 'Finance',
-        desc: 'Deal value input, rate slider, 90/10 fee donut chart & Save to Deal',
-        icon: Icons.pie_chart_rounded,
-        iconColor: AppColors.successGreen,
-        tint: AppColors.greenTint,
-        builder: (_) => const CommissionCalculatorScreen(),
-      ),
-      _ModuleItem(
-        num: '18',
-        title: 'Earnings Ledger',
-        category: 'Finance',
-        desc: '\$12,430 monthly earnings, +14.2% MoM & itemized commission reconciliation',
-        icon: Icons.account_balance_wallet_rounded,
-        iconColor: AppColors.successGreen,
-        tint: AppColors.greenTint,
-        builder: (_) => const EarningsLedgerScreen(),
-      ),
-      _ModuleItem(
-        num: '19',
-        title: 'Trade & Commission Invoices',
-        category: 'Finance',
-        desc: 'Paid (\$68K), Unpaid (\$21K), Overdue (\$6K) tiles & invoice generator',
-        icon: Icons.receipt_long_rounded,
-        iconColor: AppColors.successGreen,
-        tint: AppColors.greenTint,
-        builder: (_) => const InvoicesScreen(),
-      ),
-      _ModuleItem(
-        num: '20',
-        title: 'Cross-Border Payments & Escrow',
-        category: 'Finance',
-        desc: 'LC, TT & 50% staged Escrow release vault with 256-bit encryption',
-        icon: Icons.lock_rounded,
-        iconColor: AppColors.successGreen,
-        tint: AppColors.greenTint,
-        builder: (_) => const PaymentsScreen(),
-      ),
-      _ModuleItem(
-        num: '21',
-        title: 'Currency Rates & FX Converter',
-        category: 'Finance',
-        desc: 'USD to PKR / AED / EUR converter & live interbank sparkline trends',
-        icon: Icons.currency_exchange_rounded,
-        iconColor: AppColors.successGreen,
-        tint: AppColors.greenTint,
-        builder: (_) => const CurrencyRatesScreen(),
-      ),
-      _ModuleItem(
-        num: '22',
-        title: 'Reports & Analytics',
-        category: 'Insights & Utilities',
-        desc: 'Deal volume chart, trade country donut (UAE 38%) & conversion metrics',
-        icon: Icons.analytics_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const ReportsAnalyticsScreen(),
-      ),
-      _ModuleItem(
-        num: '23',
-        title: 'Alert Center & Notifications',
-        category: 'Insights & Utilities',
-        desc: 'Today vs Earlier chronological deal, payment & shipment alerts',
-        icon: Icons.notifications_active_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const NotificationsScreen(),
-      ),
-      _ModuleItem(
-        num: '24',
-        title: 'Trade Calendar & Tasks',
-        category: 'Insights & Utilities',
-        desc: 'Monthly deadline dots (LC expiry, shipments) & daily broker checklist',
-        icon: Icons.event_note_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const CalendarTasksScreen(),
-      ),
-      _ModuleItem(
-        num: '25',
-        title: 'Settings & Profile',
-        category: 'Insights & Utilities',
-        desc: 'User identity card, Face ID, dark mode, language & secure sign-out',
-        icon: Icons.manage_accounts_rounded,
-        iconColor: AppColors.deepNavy,
-        tint: const Color(0xFFF1F5F9),
-        builder: (_) => const SettingsProfileScreen(),
-      ),
-    ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final surfaceBg = isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9);
 
-    // Filter modules by category and search keyword
-    final filteredModules = allModules.where((mod) {
-      final matchesSearch = mod.title.toLowerCase().contains(_searchModuleQuery.toLowerCase()) ||
-          mod.num.contains(_searchModuleQuery) ||
-          mod.desc.toLowerCase().contains(_searchModuleQuery.toLowerCase()) ||
-          mod.category.toLowerCase().contains(_searchModuleQuery.toLowerCase());
-      if (!matchesSearch) return false;
-
-      if (_selectedCategory == 'All') return true;
-      if (_selectedCategory == 'Core' && mod.category == 'Core Business') return true;
-      if (_selectedCategory == 'Deal Cycle' && mod.category == 'Deal Cycle') return true;
-      if (_selectedCategory == 'Logistics' && mod.category == 'Logistics & Compliance') return true;
-      if (_selectedCategory == 'Finance' && mod.category == 'Finance') return true;
-      if (_selectedCategory == 'Insights' && mod.category == 'Insights & Utilities') return true;
-      if (_selectedCategory == 'Access' && mod.category == 'Access & Onboarding') return true;
-      return false;
-    }).toList();
+    final selectedMonthData = _monthlyData[_selectedMonthIndex];
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hi, ${user.fullName}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
-            ),
-            Row(
+        title: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsProfileScreen()),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: AppColors.successGreen,
-                    shape: BoxShape.circle,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Hi, ${user.fullName}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFFCBD5E1)),
+                  ],
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  '${user.companyName} • ${user.role == UserRole.agent ? 'Commission Agent' : user.role == UserRole.importer ? 'Importer / Buyer' : 'Exporter / Supplier'}',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFFCBD5E1)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: AppColors.successGreen,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${user.companyName} • ${user.role == UserRole.agent ? 'Commission Agent' : user.role == UserRole.importer ? 'Importer / Buyer' : 'Exporter / Supplier'}',
+                      style: const TextStyle(fontSize: 11, color: Color(0xFFCBD5E1)),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: Stack(
               clipBehavior: Clip.none,
@@ -372,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 4 Real-Time KPI Summary Cards
+            // 4 Real-Time Executive KPI Cards
             Row(
               children: [
                 Expanded(
@@ -383,7 +149,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     badgePositive: true,
                     icon: Icons.handshake_outlined,
                     iconColor: AppColors.tradeTeal,
-                    tint: AppColors.tealTint,
+                    tint: isDark ? AppColors.tradeTeal.withValues(alpha: 0.18) : AppColors.tealTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -395,7 +165,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     badgePositive: true,
                     icon: Icons.payments_outlined,
                     iconColor: AppColors.gold,
-                    tint: AppColors.goldTint,
+                    tint: isDark ? AppColors.gold.withValues(alpha: 0.18) : AppColors.goldTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
                   ),
                 ),
               ],
@@ -411,7 +185,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     badgePositive: true,
                     icon: Icons.directions_boat_outlined,
                     iconColor: AppColors.oceanBlue,
-                    tint: AppColors.blueTint,
+                    tint: isDark ? AppColors.oceanBlue.withValues(alpha: 0.18) : AppColors.blueTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -423,23 +201,355 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     badgePositive: false,
                     icon: Icons.description_outlined,
                     iconColor: AppColors.alertRed,
-                    tint: AppColors.redTint,
+                    tint: isDark ? AppColors.alertRed.withValues(alpha: 0.18) : AppColors.redTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // ALL 25 TRADELINK MODULES DIRECTORY SECTION (FEATURED DIRECTLY ON DASHBOARD)
+            // Quick Operations / Shortcuts
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Quick Actions',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
+                ),
+                Text(
+                  'One-tap operations',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildQuickActionBtn(
+                    title: 'New Quote',
+                    icon: Icons.calculate_rounded,
+                    iconColor: AppColors.gold,
+                    tint: isDark ? AppColors.gold.withValues(alpha: 0.15) : AppColors.goldTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const QuotationBuilderScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildQuickActionBtn(
+                    title: 'Add Client',
+                    icon: Icons.person_add_alt_1_rounded,
+                    iconColor: AppColors.tradeTeal,
+                    tint: isDark ? AppColors.tradeTeal.withValues(alpha: 0.15) : AppColors.tealTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ClientManagementScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildQuickActionBtn(
+                    title: 'Track Cargo',
+                    icon: Icons.directions_boat_rounded,
+                    iconColor: AppColors.oceanBlue,
+                    tint: isDark ? AppColors.oceanBlue.withValues(alpha: 0.15) : AppColors.blueTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ShipmentTrackingScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildQuickActionBtn(
+                    title: 'Commission',
+                    icon: Icons.pie_chart_rounded,
+                    iconColor: AppColors.successGreen,
+                    tint: isDark ? AppColors.successGreen.withValues(alpha: 0.15) : AppColors.greenTint,
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CommissionCalculatorScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildQuickActionBtn(
+                    title: 'Live FX',
+                    icon: Icons.currency_exchange_rounded,
+                    iconColor: AppColors.tradeTeal,
+                    tint: isDark ? AppColors.tradeTeal.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
+                    cardBg: cardBg,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CurrencyRatesScreen()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Active Contract Spotlight Card
+            if (primaryOrder != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: borderColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.tradeTeal.withValues(alpha: 0.2) : AppColors.tealTint,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                primaryOrder.orderId,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.tradeTeal,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Active Contract Spotlight',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.oceanBlue.withValues(alpha: 0.2) : const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            primaryOrder.status,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? const Color(0xFF93C5FD) : AppColors.oceanBlue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${primaryOrder.buyerName} • ${primaryOrder.productSummary}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Contract Value: \$${primaryOrder.orderValue.toStringAsFixed(0)} • Net Commission: \$${primaryOrder.agentCommission.toStringAsFixed(0)}',
+                      style: TextStyle(fontSize: 12, color: textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    // Progress Bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: primaryOrder.progressPct / 100.0,
+                        minHeight: 6,
+                        backgroundColor: isDark ? const Color(0xFF2E3856) : const Color(0xFFF1F5F9),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tradeTeal),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Milestone: ${primaryOrder.milestones.lastWhere((m) => m.isCompleted, orElse: () => primaryOrder.milestones.first).title}',
+                          style: TextStyle(fontSize: 11, color: textSecondary, fontWeight: FontWeight.w600),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: primaryOrder)),
+                            );
+                          },
+                          child: const Row(
+                            children: [
+                              Text(
+                                'View Contract',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppColors.tradeTeal),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            // Active Maritime Shipment Radar Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [const Color(0xFF0F1E36), const Color(0xFF162B4D)]
+                      : [const Color(0xFF0F2B48), const Color(0xFF1E3A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF2B4365) : Colors.transparent,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.directions_boat_filled, color: Colors.white, size: 18),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            activeShipment.containerNumber,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.tradeTeal.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.tradeTeal.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          activeShipment.status,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF5EEAD4)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Vessel: ${activeShipment.vesselName} (${activeShipment.containerType})',
+                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Route: ${activeShipment.originPort} → ${activeShipment.destinationPort} • ETA in 2 days',
+                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ShipmentTrackingScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.map_outlined, size: 14, color: Colors.white),
+                          SizedBox(width: 6),
+                          Text(
+                            'Open Vessel AIS Route Map',
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // HIGH-END COMMISSION & REVENUE ANALYTICS PANEL (HIGH FIDELITY)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: borderColor),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.02),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),
@@ -448,301 +558,420 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header Row with Timeframe Switcher
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.apps_rounded, color: AppColors.tradeTeal, size: 22),
-                          SizedBox(width: 8),
                           Text(
-                            'All TradeLink Modules (25)',
+                            'Commission Growth',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.deepNavy,
+                              color: textPrimary,
+                              letterSpacing: -0.2,
                             ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Trailing performance & revenue pace',
+                            style: TextStyle(fontSize: 12, color: textSecondary),
                           ),
                         ],
                       ),
+                      // Timeframe Switcher (3M, 6M, 1Y)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
-                          color: AppColors.tealTint,
-                          borderRadius: BorderRadius.circular(12),
+                          color: surfaceBg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: borderColor),
                         ),
-                        child: Text(
-                          '${filteredModules.length} Modules',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: ['3M', '6M', '1Y'].map((period) {
+                            final isSel = _selectedGrowthPeriod == period;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedGrowthPeriod = period),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isSel ? AppColors.tradeTeal : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                child: Text(
+                                  period,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSel ? Colors.white : textSecondary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tap any module to open its interactive screen. Press < on any screen to return here.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Module Search Input
-                  TextField(
-                    onChanged: (val) => setState(() => _searchModuleQuery = val),
-                    decoration: InputDecoration(
-                      hintText: 'Search module by name or # (e.g. 08, catalog, tracking)...',
-                      prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textSecondaryLight),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
+                  // Mini Metric Strip inside Panel
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: surfaceBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Oct Revenue', style: TextStyle(fontSize: 10, color: textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('\$12,430', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
+                          ],
+                        ),
+                        Container(width: 1, height: 26, color: borderColor),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('MoM Delta', style: TextStyle(fontSize: 10, color: textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            const Text('+14.2%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.successGreen)),
+                          ],
+                        ),
+                        Container(width: 1, height: 26, color: borderColor),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Avg Rate', style: TextStyle(fontSize: 10, color: textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('2.5% CIF', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+                          ],
+                        ),
+                        Container(width: 1, height: 26, color: borderColor),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Volume', style: TextStyle(fontSize: 10, color: textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('26 Deals', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 18),
+
+                  // Target Baseline Indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.tradeTeal,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Selected: ${selectedMonthData['month']} (${selectedMonthData['value']} • ${selectedMonthData['deals']} Deals)',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        'Target: \$10,000/mo',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 12),
 
-                  // Category Filter Chips
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+                  // Interactive Custom Bar Chart Canvas
+                  SizedBox(
+                    height: 135,
+                    child: Stack(
                       children: [
-                        _buildCategoryChip('All (25)', 'All'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Core (05-08)', 'Core'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Deal Cycle (09-13)', 'Deal Cycle'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Logistics (14-16)', 'Logistics'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Finance (17-21)', 'Finance'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Insights (22-25)', 'Insights'),
-                        const SizedBox(width: 6),
-                        _buildCategoryChip('Access (01-03)', 'Access'),
+                        // Dotted target horizontal line at ~80%
+                        Positioned(
+                          top: 30,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: borderColor.withValues(alpha: 0.8),
+                                  width: 1,
+                                  style: BorderStyle.solid,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Bars Row
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: List.generate(_monthlyData.length, (idx) {
+                            final item = _monthlyData[idx];
+                            final isSel = _selectedMonthIndex == idx;
+                            final isOct = idx == 5;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedMonthIndex = idx),
+                              behavior: HitTestBehavior.opaque,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  // Month value tag
+                                  Text(
+                                    item['value'],
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                                      color: isSel ? AppColors.tradeTeal : textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  // The Bar Container
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: isSel ? 28 : 22,
+                                    height: 85 * (item['factor'] as double),
+                                    decoration: BoxDecoration(
+                                      gradient: isOct
+                                          ? const LinearGradient(
+                                              colors: [AppColors.tradeTeal, Color(0xFF0F766E)],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            )
+                                          : isSel
+                                              ? const LinearGradient(
+                                                  colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                )
+                                              : null,
+                                      color: (!isOct && !isSel)
+                                          ? (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1))
+                                          : null,
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: isSel
+                                          ? [
+                                              BoxShadow(
+                                                color: AppColors.tradeTeal.withValues(alpha: 0.35),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ]
+                                          : [],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    item['month'],
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                                      color: isSel ? textPrimary : textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 14),
 
-                  // Module List
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredModules.length,
-                    separatorBuilder: (_, __) => const Divider(height: 12, color: Color(0xFFF1F5F9)),
-                    itemBuilder: (context, index) {
-                      final mod = filteredModules[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: mod.builder),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                          child: Row(
-                            children: [
-                              // Module Number Badge & Icon
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: mod.tint,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Center(
-                                      child: Icon(mod.icon, color: mod.iconColor, size: 22),
-                                    ),
-                                    Positioned(
-                                      top: 2,
-                                      right: 3,
-                                      child: Text(
-                                        mod.num,
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w900,
-                                          color: mod.iconColor.withValues(alpha: 0.8),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-
-                              // Title and description
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '${mod.num}. ${mod.title}',
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.deepNavy,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            mod.category,
-                                            style: const TextStyle(fontSize: 8.5, color: AppColors.textSecondaryLight, fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      mod.desc,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Forward Chevron Arrow
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 14,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Monthly Commission 6-Month Bar Chart
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Commission Growth',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
-                          ),
-                          Text(
-                            'Last 6 months performance',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.tealTint,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          '+14.2% MoM',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Interactive Custom Bar Chart
-                  SizedBox(
-                    height: 130,
+                  // Reconciliation Summary Footer
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: surfaceBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildBar('May', 0.45, '\$6.2K'),
-                        _buildBar('Jun', 0.60, '\$8.1K'),
-                        _buildBar('Jul', 0.55, '\$7.4K'),
-                        _buildBar('Aug', 0.75, '\$9.8K'),
-                        _buildBar('Sep', 0.85, '\$10.8K'),
-                        _buildBar('Oct', 1.00, '\$12.4K', isHighlighted: true),
+                        Row(
+                          children: [
+                            const Icon(Icons.shield_outlined, size: 14, color: AppColors.tradeTeal),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Gross GMV: ${selectedMonthData['volume']}',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Net Payout (90%): \$${((itemToNumber(selectedMonthData['value']) * 0.9)).toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.successGreen),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Recent Activity Feed
+            // HIGH-END RECENT ACTIVITY & AUDIT FEED (HIGH FIDELITY)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Recent Activity',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Activity',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Live deals, escrow releases & vessel events',
+                      style: TextStyle(fontSize: 12, color: textSecondary),
+                    ),
+                  ],
                 ),
-                TextButton(
+                TextButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const NotificationsScreen()),
                     );
                   },
-                  child: const Text('View All', style: TextStyle(color: AppColors.tradeTeal, fontSize: 13, fontWeight: FontWeight.w600)),
+                  icon: const Icon(Icons.history_rounded, size: 16, color: AppColors.tradeTeal),
+                  label: const Text(
+                    'Full Feed',
+                    style: TextStyle(color: AppColors.tradeTeal, fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
 
-            _buildActivityItem(
-              title: 'Quotation Accepted (Q-1042)',
-              detail: 'Al Noor Traders approved 8,000 pcs LED panels • Commission \$1,235',
+            // Filter Chips Row for Activities
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: ['All', 'Deals', 'Escrow', 'Logistics'].map((filter) {
+                  final isSel = _selectedActivityFilter == filter;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedActivityFilter = filter),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isSel ? AppColors.tradeTeal : cardBg,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: isSel ? AppColors.tradeTeal : borderColor),
+                        ),
+                        child: Text(
+                          filter,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                            color: isSel ? Colors.white : textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Audit Feed Cards
+            _buildProActivityItem(
+              title: 'Quotation Approved',
+              refCode: 'Q-1042',
+              partner: 'Al Noor Traders (Dubai, UAE)',
+              detail: 'Approved 8,000 pcs LED panels • \$98,400 CIF Dubai',
+              amountBadge: '+\$1,235 Commission',
+              amountColor: AppColors.successGreen,
               time: '15m ago',
-              icon: Icons.check_circle_outline,
+              icon: Icons.check_circle_outline_rounded,
               iconColor: AppColors.successGreen,
-              tint: AppColors.greenTint,
+              accentColor: AppColors.successGreen,
+              cardBg: cardBg,
+              borderColor: borderColor,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+              surfaceBg: surfaceBg,
             ),
-            _buildActivityItem(
+            _buildProActivityItem(
               title: 'Escrow Milestone Released',
-              detail: 'ORD-5530 advance payment \$6,500 released to Mumbai Spices',
+              refCode: 'ORD-5530',
+              partner: 'Mumbai Spices & Exports',
+              detail: '50% advance milestone \$6,500 disbursed upon B/L verification',
+              amountBadge: '\$6,500 Released',
+              amountColor: AppColors.gold,
               time: '2h ago',
-              icon: Icons.lock_open_outlined,
+              icon: Icons.lock_open_rounded,
               iconColor: AppColors.gold,
-              tint: AppColors.goldTint,
+              accentColor: AppColors.gold,
+              cardBg: cardBg,
+              borderColor: borderColor,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+              surfaceBg: surfaceBg,
             ),
-            _buildActivityItem(
+            _buildProActivityItem(
               title: 'Vessel Departed Seaport',
-              detail: 'MV Ocean Star carrying MSKU-7781452 departed Karachi for Jebel Ali',
+              refCode: 'MSKU-7781452',
+              partner: 'MV Ocean Star (Maersk Line)',
+              detail: 'Departed Port Qasim, Karachi. En route to Jebel Ali. ETA Nov 09.',
+              amountBadge: 'In Transit',
+              amountColor: AppColors.oceanBlue,
               time: '4h ago',
-              icon: Icons.directions_boat_outlined,
+              icon: Icons.directions_boat_filled_rounded,
               iconColor: AppColors.oceanBlue,
-              tint: AppColors.blueTint,
+              accentColor: AppColors.oceanBlue,
+              cardBg: cardBg,
+              borderColor: borderColor,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+              surfaceBg: surfaceBg,
+            ),
+            _buildProActivityItem(
+              title: 'Customs HS Tariff Cleared',
+              refCode: 'HS-9405.42',
+              partner: 'Pakistan Single Window (PSW)',
+              detail: '5-point compliance validated: 0% customs duty waiver recognized',
+              amountBadge: 'PSW Verified',
+              amountColor: AppColors.tradeTeal,
+              time: '6h ago',
+              icon: Icons.policy_rounded,
+              iconColor: AppColors.tradeTeal,
+              accentColor: AppColors.tradeTeal,
+              cardBg: cardBg,
+              borderColor: borderColor,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+              surfaceBg: surfaceBg,
             ),
           ],
         ),
@@ -750,24 +979,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoryChip(String label, String key) {
-    final isSelected = _selectedCategory == key;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = key),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+  double itemToNumber(String raw) {
+    final cleaned = raw.replaceAll(RegExp(r'[^\d.]'), '');
+    return double.tryParse(cleaned) ?? 10000.0;
+  }
+
+  Widget _buildQuickActionBtn({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required Color tint,
+    required Color cardBg,
+    required Color borderColor,
+    required Color textPrimary,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 86,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(20),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondaryLight,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: tint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -781,13 +1049,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required IconData icon,
     required Color iconColor,
     required Color tint,
+    required Color cardBg,
+    required Color borderColor,
+    required Color textPrimary,
+    required Color textSecondary,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -813,7 +1085,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: badgePositive ? AppColors.greenTint : AppColors.redTint,
+                  color: badgePositive
+                      ? AppColors.successGreen.withValues(alpha: 0.15)
+                      : AppColors.alertRed.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -830,19 +1104,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: AppColors.deepNavy,
+              color: textPrimary,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondaryLight,
+              color: textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -851,114 +1125,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBar(String month, double heightFactor, String value, {bool isHighlighted = false}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            color: isHighlighted ? AppColors.tradeTeal : AppColors.textSecondaryLight,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          width: 24,
-          height: 80 * heightFactor,
-          decoration: BoxDecoration(
-            color: isHighlighted ? AppColors.tradeTeal : const Color(0xFFCBD5E1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          month,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
-            color: isHighlighted ? AppColors.deepNavy : AppColors.textSecondaryLight,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem({
+  Widget _buildProActivityItem({
     required String title,
+    required String refCode,
+    required String partner,
     required String detail,
+    required String amountBadge,
+    required Color amountColor,
     required String time,
     required IconData icon,
     required Color iconColor,
-    required Color tint,
+    required Color accentColor,
+    required Color cardBg,
+    required Color borderColor,
+    required Color textPrimary,
+    required Color textSecondary,
+    required Color surfaceBg,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: tint,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            time,
-            style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Colored Vertical Accent Strip
+              Container(
+                width: 4,
+                color: accentColor,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icon container
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: iconColor, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Activity Body
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: textPrimary),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: surfaceBg,
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        refCode,
+                                        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: textSecondary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: amountColor.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    amountBadge,
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: amountColor),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              partner,
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.tradeTeal),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              detail,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11, color: textSecondary),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.access_time_rounded, size: 11, color: textSecondary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  time,
+                                  style: TextStyle(fontSize: 10, color: textSecondary),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
-}
-
-class _ModuleItem {
-  final String num;
-  final String title;
-  final String category;
-  final String desc;
-  final IconData icon;
-  final Color iconColor;
-  final Color tint;
-  final WidgetBuilder builder;
-
-  const _ModuleItem({
-    required this.num,
-    required this.title,
-    required this.category,
-    required this.desc,
-    required this.icon,
-    required this.iconColor,
-    required this.tint,
-    required this.builder,
-  });
 }

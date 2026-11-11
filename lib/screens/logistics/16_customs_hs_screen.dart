@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class CustomsHsScreen extends StatefulWidget {
   const CustomsHsScreen({super.key});
@@ -16,30 +17,37 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        backgroundColor: context.cardColor,
+        title: Row(
           children: [
-            Icon(Icons.verified, color: AppColors.tradeTeal, size: 24),
-            SizedBox(width: 8),
-            Text('Customs Checklist Export'),
+            const Icon(Icons.verified, color: AppColors.tradeTeal, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Customs Checklist Export',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.textPrimary),
+            ),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Pakistan Single Window (PSW) & GCC Compliance Dossier',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.deepNavy),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: context.textPrimary),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Includes tariff schedule HS 9405.42 (Duty 11%, Sales Tax 18%, ACD 2%, WHT 5.5%) alongside signed 5-point verification checks for container clearance.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Close', style: TextStyle(color: context.textSecondary)),
+          ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(ctx);
@@ -50,6 +58,10 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
                 ),
               );
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.tradeTeal,
+              foregroundColor: Colors.white,
+            ),
             icon: const Icon(Icons.download, size: 16),
             label: const Text('Download PDF'),
           ),
@@ -62,9 +74,10 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
     final hs = state.verifiedHsCode;
+    final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: context.canvasColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -76,6 +89,10 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
           },
         ),
         title: const Text('Customs & HS Code Tariff'),
+        actions: const [
+          ThemeToggleButton(transparentBackground: true),
+          SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -86,27 +103,30 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'PSW Tariff Schedule Lookup',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _searchController,
+                    style: TextStyle(fontSize: 13, color: context.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search product keyword (e.g. LED panel light) or HS code...',
-                      prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondaryLight),
+                      hintStyle: TextStyle(fontSize: 12, color: context.textSecondary),
+                      prefixIcon: Icon(Icons.search, size: 20, color: context.textSecondary),
                       filled: true,
-                      fillColor: const Color(0xFFF1F5F9),
+                      fillColor: context.surfaceColor,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: context.borderColor)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: context.borderColor)),
                     ),
                   ),
                 ],
@@ -118,9 +138,12 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.tradeTeal.withValues(alpha: 0.4), width: 1.5),
+                border: Border.all(
+                  color: isDark ? AppColors.tradeTeal.withValues(alpha: 0.6) : AppColors.tradeTeal.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,12 +156,17 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.deepNavy,
+                              color: isDark ? const Color(0xFF1E293B) : AppColors.deepNavy,
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: isDark ? const Color(0xFF38BDF8) : Colors.transparent),
                             ),
                             child: Text(
                               'HS ${hs.hsCode}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? const Color(0xFF38BDF8) : Colors.white,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -153,7 +181,10 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(color: AppColors.tealTint, borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.tradeTeal.withValues(alpha: 0.2) : AppColors.tealTint,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         child: Text(
                           'Total Tariff: ${hs.totalDutyPct}%',
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.tradeTeal),
@@ -164,19 +195,19 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
                   const SizedBox(height: 12),
                   Text(
                     hs.description,
-                    style: const TextStyle(fontSize: 13, color: AppColors.deepNavy, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 13, color: context.textPrimary, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 14),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: context.borderColor),
                   const SizedBox(height: 12),
 
                   // Duty Breakdown Grid
                   Row(
                     children: [
-                      Expanded(child: _buildDutyCol('Customs Duty', '${hs.customsDutyPct}%')),
-                      Expanded(child: _buildDutyCol('Sales Tax / VAT', '${hs.salesTaxPct}%')),
-                      Expanded(child: _buildDutyCol('Additional Duty', '${hs.additionalDutyPct}%')),
-                      Expanded(child: _buildDutyCol('Withholding Tax', '${hs.withholdingTaxPct}%')),
+                      Expanded(child: _buildDutyCol('Customs Duty', '${hs.customsDutyPct}%', context)),
+                      Expanded(child: _buildDutyCol('Sales Tax / VAT', '${hs.salesTaxPct}%', context)),
+                      Expanded(child: _buildDutyCol('Additional Duty', '${hs.additionalDutyPct}%', context)),
+                      Expanded(child: _buildDutyCol('Withholding Tax', '${hs.withholdingTaxPct}%', context)),
                     ],
                   ),
                 ],
@@ -188,9 +219,9 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Pre-Shipment Compliance Checklist',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: context.textPrimary),
                 ),
                 Text(
                   '${state.customsChecklist.where((x) => x.isChecked).length} of ${state.customsChecklist.length} Verified',
@@ -200,17 +231,18 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
             ),
             const SizedBox(height: 10),
 
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+            Material(
+              color: context.cardColor,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                side: BorderSide(color: context.borderColor),
               ),
+              clipBehavior: Clip.antiAlias,
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: state.customsChecklist.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => Divider(height: 1, color: context.borderColor),
                 itemBuilder: (context, index) {
                   final item = state.customsChecklist[index];
                   return CheckboxListTile(
@@ -221,7 +253,7 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: item.isChecked ? FontWeight.w700 : FontWeight.w500,
-                        color: item.isChecked ? AppColors.deepNavy : AppColors.textSecondaryLight,
+                        color: item.isChecked ? context.textSecondary : context.textPrimary,
                         decoration: item.isChecked ? TextDecoration.lineThrough : null,
                       ),
                     ),
@@ -236,7 +268,8 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
             ElevatedButton.icon(
               onPressed: _showExportPdfDialog,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: isDark ? AppColors.tradeTeal : AppColors.deepNavy,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -250,13 +283,13 @@ class _CustomsHsScreenState extends State<CustomsHsScreen> {
     );
   }
 
-  Widget _buildDutyCol(String label, String value) {
+  Widget _buildDutyCol(String label, String value, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondaryLight)),
+        Text(label, style: TextStyle(fontSize: 10, color: context.textSecondary)),
         const SizedBox(height: 3),
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: context.textPrimary)),
       ],
     );
   }

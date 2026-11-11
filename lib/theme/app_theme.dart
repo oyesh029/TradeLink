@@ -35,9 +35,18 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          side: const BorderSide(color: AppColors.borderLight, width: 1),
         ),
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -85,6 +94,7 @@ class AppTheme {
         surface: AppColors.cardDark,
         error: AppColors.alertRed,
         onPrimary: Colors.white,
+        onSecondary: Colors.white,
         onSurface: AppColors.textPrimaryDark,
       ),
       appBarTheme: const AppBarTheme(
@@ -103,9 +113,34 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFF2E3856), width: 1),
+          side: const BorderSide(color: AppColors.borderDark, width: 1),
         ),
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.cardDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.cardDark,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.cardDark,
+        selectedColor: AppColors.tradeTeal,
+        secondarySelectedColor: AppColors.tradeTeal,
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.borderDark),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.borderDark,
+        thickness: 1,
+        space: 1,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

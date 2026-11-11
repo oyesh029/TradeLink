@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '10_quotation_builder_screen.dart';
 
 class InquiriesRfqScreen extends StatefulWidget {
@@ -17,6 +18,11 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
 
     final filteredRfqs = state.rfqs.where((rfq) {
       if (_selectedStatus == 'All') return true;
@@ -24,11 +30,11 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
-          tooltip: 'Back to Dashboard',
+          tooltip: 'Back',
           onPressed: () {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
@@ -36,31 +42,29 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
           },
         ),
         title: const Text('Inquiries & RFQs'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-          ),
+        actions: const [
+          ThemeToggleButton(transparentBackground: true),
+          SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
           // Pipeline Summary Counters Strip
           Container(
-            color: Colors.white,
+            color: cardBg,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 Expanded(
-                  child: _buildPipelineTile('Open', '7', AppColors.tradeTeal, AppColors.tealTint),
+                  child: _buildPipelineTile('Open', '7', AppColors.tradeTeal, isDark ? AppColors.tradeTeal.withValues(alpha: 0.15) : AppColors.tealTint),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _buildPipelineTile('Quoted', '12', AppColors.gold, AppColors.goldTint),
+                  child: _buildPipelineTile('Quoted', '12', AppColors.gold, isDark ? AppColors.gold.withValues(alpha: 0.15) : AppColors.goldTint),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _buildPipelineTile('Won', '31', AppColors.successGreen, AppColors.greenTint),
+                  child: _buildPipelineTile('Won', '31', AppColors.successGreen, isDark ? AppColors.successGreen.withValues(alpha: 0.15) : AppColors.greenTint),
                 ),
               ],
             ),
@@ -68,19 +72,19 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
 
           // Filter Chips
           Container(
-            color: Colors.white,
+            color: cardBg,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildStatusChip('All (${state.rfqs.length})', 'All'),
+                  _buildStatusChip('All (${state.rfqs.length})', 'All', cardBg, borderColor, textSecondary),
                   const SizedBox(width: 8),
-                  _buildStatusChip('Open', 'Open'),
+                  _buildStatusChip('Open', 'Open', cardBg, borderColor, textSecondary),
                   const SizedBox(width: 8),
-                  _buildStatusChip('Quoted', 'Quoted'),
+                  _buildStatusChip('Quoted', 'Quoted', cardBg, borderColor, textSecondary),
                   const SizedBox(width: 8),
-                  _buildStatusChip('Won', 'Won'),
+                  _buildStatusChip('Won', 'Won', cardBg, borderColor, textSecondary),
                 ],
               ),
             ),
@@ -88,14 +92,18 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
 
           // Inquiries List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredRfqs.length,
-              itemBuilder: (context, index) {
-                final rfq = filteredRfqs[index];
-                return _buildRfqCard(context, rfq);
-              },
-            ),
+            child: filteredRfqs.isEmpty
+                ? Center(
+                    child: Text('No inquiries in this category.', style: TextStyle(color: textSecondary)),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredRfqs.length,
+                    itemBuilder: (context, index) {
+                      final rfq = filteredRfqs[index];
+                      return _buildRfqCard(context, rfq, cardBg, borderColor, textPrimary, textSecondary, isDark);
+                    },
+                  ),
           ),
         ],
       ),
@@ -125,29 +133,38 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
     );
   }
 
-  Widget _buildStatusChip(String label, String key) {
+  Widget _buildStatusChip(String label, String key, Color cardBg, Color borderColor, Color textSecondary) {
     final isSelected = _selectedStatus == key;
     return GestureDetector(
       onTap: () => setState(() => _selectedStatus = key),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : const Color(0xFFF1F5F9),
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRfqCard(BuildContext context, RfqModel rfq) {
+  Widget _buildRfqCard(
+    BuildContext context,
+    RfqModel rfq,
+    Color cardBg,
+    Color borderColor,
+    Color textPrimary,
+    Color textSecondary,
+    bool isDark,
+  ) {
     final isCritical = rfq.urgency == 'Critical';
     final isHigh = rfq.urgency == 'High';
 
@@ -155,9 +172,9 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,16 +185,16 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
             children: [
               Text(
                 rfq.rfqNumber,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: isCritical
-                      ? AppColors.redTint
+                      ? (isDark ? AppColors.alertRed.withValues(alpha: 0.2) : AppColors.redTint)
                       : isHigh
-                          ? AppColors.goldTint
-                          : AppColors.blueTint,
+                          ? (isDark ? AppColors.gold.withValues(alpha: 0.2) : AppColors.goldTint)
+                          : (isDark ? AppColors.oceanBlue.withValues(alpha: 0.2) : AppColors.blueTint),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -200,15 +217,15 @@ class _InquiriesRfqScreenState extends State<InquiriesRfqScreen> {
           // Product & Quantity
           Text(
             rfq.productName,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
           ),
           const SizedBox(height: 3),
           Text(
             'Target Volume: ${rfq.targetQuantity} • Buyer: ${rfq.buyerName}',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+            style: TextStyle(fontSize: 12, color: textSecondary),
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1),
+          Divider(height: 1, color: borderColor),
           const SizedBox(height: 10),
 
           // Footer: Deadline & Respond Action

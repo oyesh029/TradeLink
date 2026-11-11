@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class SupplierDirectoryScreen extends StatefulWidget {
   const SupplierDirectoryScreen({super.key});
@@ -18,6 +19,12 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final surfaceBg = isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9);
 
     final filteredSuppliers = state.suppliers.where((sup) {
       final matchesSearch = sup.companyName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -29,7 +36,7 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -42,6 +49,7 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
         ),
         title: const Text('Supplier Directory'),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: Icon(_isMapView ? Icons.view_list_outlined : Icons.map_outlined),
             tooltip: _isMapView ? 'List View' : 'Map View',
@@ -53,19 +61,22 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
         children: [
           // Filter & Search Header
           Container(
-            color: Colors.white,
+            color: cardBg,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 TextField(
                   onChanged: (val) => setState(() => _searchQuery = val),
+                  style: TextStyle(color: textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search verified manufacturers, cities, or goods...',
-                    prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondaryLight),
+                    hintStyle: TextStyle(color: textSecondary),
+                    prefixIcon: Icon(Icons.search, size: 20, color: textSecondary),
                     filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
+                    fillColor: surfaceBg,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -73,15 +84,15 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildCatChip('All'),
+                      _buildCatChip('All', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Electronics'),
+                      _buildCatChip('Electronics', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Textiles'),
+                      _buildCatChip('Textiles', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Food'),
+                      _buildCatChip('Food', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Steel'),
+                      _buildCatChip('Steel', cardBg, borderColor, textSecondary),
                     ],
                   ),
                 ),
@@ -98,7 +109,7 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
                     itemCount: filteredSuppliers.length,
                     itemBuilder: (context, index) {
                       final supplier = filteredSuppliers[index];
-                      return _buildSupplierCard(supplier);
+                      return _buildSupplierCard(supplier, cardBg, borderColor, textPrimary, textSecondary, surfaceBg);
                     },
                   ),
           ),
@@ -107,38 +118,38 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
     );
   }
 
-  Widget _buildCatChip(String label) {
+  Widget _buildCatChip(String label, Color cardBg, Color borderColor, Color textSecondary) {
     final isSelected = _selectedCategory == label;
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.tradeTeal : Colors.white,
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.tradeTeal : const Color(0xFFCBD5E1)),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSupplierCard(SupplierModel sup) {
+  Widget _buildSupplierCard(SupplierModel sup, Color cardBg, Color borderColor, Color textPrimary, Color textSecondary, Color surfaceBg) {
     final isGold = sup.badge == 'GOLD';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -166,12 +177,12 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
                   children: [
                     Text(
                       sup.companyName,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${sup.city}, ${sup.country} • ${sup.category}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                      style: TextStyle(fontSize: 12, color: textSecondary),
                     ),
                   ],
                 ),
@@ -208,10 +219,10 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
           const SizedBox(height: 12),
           Text(
             sup.mainProducts,
-            style: const TextStyle(fontSize: 13, color: AppColors.deepNavy, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 13, color: textPrimary, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1),
+          Divider(height: 1, color: borderColor),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -222,12 +233,12 @@ class _SupplierDirectoryScreenState extends State<SupplierDirectoryScreen> {
                   const SizedBox(width: 4),
                   Text(
                     '${sup.rating}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textPrimary),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '(${sup.reviewsCount} reviews)',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                    style: TextStyle(fontSize: 11, color: textSecondary),
                   ),
                 ],
               ),

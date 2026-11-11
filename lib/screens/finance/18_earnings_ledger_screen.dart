@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class EarningsLedgerScreen extends StatefulWidget {
   const EarningsLedgerScreen({super.key});
@@ -17,23 +18,21 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Export Earnings Ledger'),
-        content: const Text('Export itemized commission reconciliation ledger for October 2026 as Excel (.xlsx) or audit PDF (.pdf)?'),
+        title: const Text('Export Commission Ledger'),
+        content: const Text('Generate compliant Excel / PDF reconciliation statement for tax and audit reporting?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported Excel ledger report!')));
-            },
-            child: const Text('Excel (.xlsx)'),
-          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported PDF ledger report!')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ledger export generated: TradeLink_Earnings_Oct2026.pdf'),
+                  backgroundColor: AppColors.successGreen,
+                ),
+              );
             },
-            child: const Text('PDF Report'),
+            child: const Text('Export Statement'),
           ),
         ],
       ),
@@ -43,6 +42,11 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
 
     final filteredEntries = state.ledgerEntries.where((e) {
       if (_selectedFilter == 'All') return true;
@@ -50,11 +54,11 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
-          tooltip: 'Back to Dashboard',
+          tooltip: 'Back',
           onPressed: () {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
@@ -63,10 +67,12 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
         ),
         title: const Text('Earnings Ledger'),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: const Icon(Icons.file_download_outlined),
             onPressed: _exportReport,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
@@ -76,15 +82,18 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.deepNavy, Color(0xFF16325C)],
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF0F1E36), const Color(0xFF1E293B)]
+                    : [AppColors.deepNavy, const Color(0xFF16325C)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isDark ? const Color(0xFF2B4365) : Colors.transparent),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.deepNavy.withValues(alpha: 0.2),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -97,8 +106,8 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Earnings (October 2026)',
-                      style: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w500),
+                      'TOTAL REVENUE RECEIVABLE',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8), letterSpacing: 0.8),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -107,8 +116,8 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text(
-                        '+14.2% vs Sept',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.tradeTeal),
+                        '+14.2% MoM',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF5EEAD4)),
                       ),
                     ),
                   ],
@@ -176,11 +185,11 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildFilterChip('All Entries', 'All'),
+                _buildFilterChip('All Entries', 'All', cardBg, borderColor, textSecondary),
                 const SizedBox(width: 8),
-                _buildFilterChip('Received / Paid', 'Paid'),
+                _buildFilterChip('Received / Paid', 'Paid', cardBg, borderColor, textSecondary),
                 const SizedBox(width: 8),
-                _buildFilterChip('Pending Due', 'Pending'),
+                _buildFilterChip('Pending Due', 'Pending', cardBg, borderColor, textSecondary),
               ],
             ),
           ),
@@ -188,60 +197,73 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
 
           // Transaction Rows
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filteredEntries.length,
-              itemBuilder: (context, index) {
-                final entry = filteredEntries[index];
-                return _buildLedgerTile(entry);
-              },
-            ),
+            child: filteredEntries.isEmpty
+                ? Center(
+                    child: Text('No ledger entries found.', style: TextStyle(color: textSecondary)),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = filteredEntries[index];
+                      return _buildLedgerTile(entry, cardBg, borderColor, textPrimary, textSecondary, isDark);
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String key) {
+  Widget _buildFilterChip(String label, String key, Color cardBg, Color borderColor, Color textSecondary) {
     final isSelected = _selectedFilter == key;
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = key),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : Colors.white,
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.deepNavy : const Color(0xFFE2E8F0)),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildLedgerTile(LedgerEntryModel entry) {
+  Widget _buildLedgerTile(
+    LedgerEntryModel entry,
+    Color cardBg,
+    Color borderColor,
+    Color textPrimary,
+    Color textSecondary,
+    bool isDark,
+  ) {
     final isPaid = entry.status == 'Paid';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isPaid ? AppColors.greenTint : AppColors.goldTint,
+              color: isPaid
+                  ? (isDark ? AppColors.successGreen.withValues(alpha: 0.15) : AppColors.greenTint)
+                  : (isDark ? AppColors.gold.withValues(alpha: 0.15) : AppColors.goldTint),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -260,14 +282,14 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
                   children: [
                     Text(
                       entry.orderNumber,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: textPrimary),
                     ),
                     Text(
                       '+ \$${entry.commissionAmount.toStringAsFixed(0)}',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: isPaid ? AppColors.successGreen : AppColors.deepNavy,
+                        color: isPaid ? AppColors.successGreen : textPrimary,
                       ),
                     ),
                   ],
@@ -278,14 +300,14 @@ class _EarningsLedgerScreenState extends State<EarningsLedgerScreen> {
                   children: [
                     Text(
                       '${entry.clientName} • ${entry.paymentMethod}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                      style: TextStyle(fontSize: 11, color: textSecondary),
                     ),
                     Text(
                       entry.dateText,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isPaid ? AppColors.textSecondaryLight : AppColors.gold,
+                        color: isPaid ? textSecondary : AppColors.gold,
                       ),
                     ),
                   ],

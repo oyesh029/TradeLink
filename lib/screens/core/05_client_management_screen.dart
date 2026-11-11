@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '06_client_profile_screen.dart';
+import '07_supplier_directory_screen.dart';
+import '08_product_catalog_screen.dart';
 
 class ClientManagementScreen extends StatefulWidget {
   const ClientManagementScreen({super.key});
@@ -15,6 +18,77 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
   String _selectedFilter = 'All';
   String _searchQuery = '';
   final _searchController = TextEditingController();
+
+  void _confirmDeleteClient(BuildContext context, ClientModel client, TradeState state) {
+    final isDark = state.isDarkMode;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.redTint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.delete_forever_rounded, color: AppColors.alertRed, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Remove Trader?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : AppColors.deepNavy,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to remove "${client.companyName}" (${client.role}) from the local SQLite database? All linked trade volume records will be permanently removed.',
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await state.removeClient(client.clientId);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text('${client.companyName} removed from database.'),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: AppColors.alertRed,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.alertRed),
+            child: const Text('Remove from DB'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showAddClientDialog() {
     final companyController = TextEditingController();
@@ -76,7 +150,7 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (companyController.text.isNotEmpty) {
                   final newClient = ClientModel(
                     clientId: 'cli-${DateTime.now().millisecondsSinceEpoch}',
@@ -96,10 +170,24 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                     notes: ['Newly onboarded client.'],
                   );
                   final state = TradeStateInherited.of(context);
-                  state.addClient(newClient);
-                  Navigator.pop(ctx);
+                  await state.addClient(newClient);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                  }
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${newClient.companyName} added successfully')),
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text('${newClient.companyName} added and saved to database!'),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppColors.successGreen,
+                    ),
                   );
                 }
               },
@@ -114,6 +202,12 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final surfaceBg = isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9);
 
     final filteredClients = state.clients.where((client) {
       final matchesSearch = client.companyName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -129,23 +223,35 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
-          tooltip: 'Back to Dashboard',
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: const Text('Client Management'),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+                tooltip: 'Back',
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: const Text('Clients & Partners'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {},
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Supplier Directory & Map',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SupplierDirectoryScreen()),
+            ),
           ),
+          IconButton(
+            icon: const Icon(Icons.inventory_2_outlined),
+            tooltip: 'Product Catalog',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProductCatalogScreen()),
+            ),
+          ),
+          const ThemeToggleButton(transparentBackground: true),
+          const SizedBox(width: 6),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -155,22 +261,98 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
       ),
       body: Column(
         children: [
+          // Domain Feature Sub-Navigation
+          Container(
+            color: cardBg,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.deepNavy,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Clients',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SupplierDirectoryScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: surfaceBg,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderColor),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Suppliers & Map',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProductCatalogScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: surfaceBg,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderColor),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Products',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // Search & Filter Header
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: cardBg,
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Column(
               children: [
                 // Search Input
                 TextField(
                   controller: _searchController,
                   onChanged: (val) => setState(() => _searchQuery = val),
+                  style: TextStyle(color: textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search by client, country, or company...',
-                    prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondaryLight),
+                    hintStyle: TextStyle(color: textSecondary),
+                    prefixIcon: Icon(Icons.search, size: 20, color: textSecondary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
+                            icon: Icon(Icons.clear, size: 18, color: textSecondary),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
@@ -178,11 +360,15 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                           )
                         : null,
                     filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
+                    fillColor: surfaceBg,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: borderColor),
                     ),
                   ),
                 ),
@@ -193,13 +379,13 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterChip('All (${state.clients.length})', 'All'),
+                      _buildFilterChip('All (${state.clients.length})', 'All', cardBg, borderColor, textPrimary, textSecondary),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Importers', 'Importers'),
+                      _buildFilterChip('Importers', 'Importers', cardBg, borderColor, textPrimary, textSecondary),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Exporters', 'Exporters'),
+                      _buildFilterChip('Exporters', 'Exporters', cardBg, borderColor, textPrimary, textSecondary),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Active Only', 'Active'),
+                      _buildFilterChip('Active Only', 'Active', cardBg, borderColor, textPrimary, textSecondary),
                     ],
                   ),
                 ),
@@ -210,15 +396,18 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
           // Client List
           Expanded(
             child: filteredClients.isEmpty
-                ? const Center(
-                    child: Text('No clients match your filter criteria.'),
+                ? Center(
+                    child: Text(
+                      'No clients match your filter criteria.',
+                      style: TextStyle(color: textSecondary),
+                    ),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     itemCount: filteredClients.length,
                     itemBuilder: (context, index) {
                       final client = filteredClients[index];
-                      return _buildClientCard(context, client);
+                      return _buildClientCard(context, client, cardBg, borderColor, textPrimary, textSecondary, surfaceBg);
                     },
                   ),
           ),
@@ -227,17 +416,17 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, String key) {
+  Widget _buildFilterChip(String label, String key, Color cardBg, Color borderColor, Color textPrimary, Color textSecondary) {
     final isSelected = _selectedFilter == key;
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = key),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : Colors.white,
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.deepNavy : const Color(0xFFCBD5E1),
+            color: isSelected ? AppColors.tradeTeal : borderColor,
           ),
         ),
         child: Text(
@@ -245,20 +434,28 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildClientCard(BuildContext context, ClientModel client) {
+  Widget _buildClientCard(
+    BuildContext context,
+    ClientModel client,
+    Color cardBg,
+    Color borderColor,
+    Color textPrimary,
+    Color textSecondary,
+    Color surfaceBg,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -310,20 +507,20 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                       children: [
                         Text(
                           client.companyName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.deepNavy,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondaryLight),
+                            Icon(Icons.location_on_outlined, size: 14, color: textSecondary),
                             const SizedBox(width: 3),
                             Text(
                               client.country,
-                              style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                              style: TextStyle(fontSize: 12, color: textSecondary),
                             ),
                           ],
                         ),
@@ -333,7 +530,9 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: client.status == 'Active' ? AppColors.greenTint : AppColors.goldTint,
+                      color: client.status == 'Active'
+                          ? AppColors.successGreen.withValues(alpha: 0.15)
+                          : AppColors.gold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -345,10 +544,19 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.alertRed),
+                    tooltip: 'Remove Trader from Database',
+                    onPressed: () {
+                      final state = TradeStateInherited.of(context);
+                      _confirmDeleteClient(context, client, state);
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
-              const Divider(height: 1),
+              Divider(height: 1, color: borderColor),
               const SizedBox(height: 12),
 
               // Row 2: Metrics Strip
@@ -360,18 +568,19 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: surfaceBg,
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: borderColor),
                         ),
                         child: Text(
                           client.role,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Text(
                         '${client.totalDeals} Deals',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                        style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
                     ],
                   ),
@@ -379,10 +588,10 @@ class _ClientManagementScreenState extends State<ClientManagementScreen> {
                     children: [
                       Text(
                         '\$${(client.tradeVolumeUsd / 1000).toStringAsFixed(0)}K Volume',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textPrimary),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondaryLight),
+                      Icon(Icons.chevron_right, size: 18, color: textSecondary),
                     ],
                   ),
                 ],

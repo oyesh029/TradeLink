@@ -406,6 +406,25 @@ class CurrencyRateModel {
     required this.dailyChangePct,
     required this.sparkline,
   });
+
+  String get symbol {
+    switch (code) {
+      case 'PKR':
+        return '₨';
+      case 'AED':
+        return 'د.إ';
+      case 'CNY':
+        return '¥';
+      case 'EUR':
+        return '€';
+      case 'SAR':
+        return '﷼';
+      case 'GBP':
+        return '£';
+      default:
+        return '\$';
+    }
+  }
 }
 
 class NotificationModel {
@@ -441,5 +460,211 @@ class TaskItemModel {
     required this.scheduledTime,
     required this.priority,
     this.isDone = false,
+  });
+}
+
+class TradeDisputeModel {
+  final String disputeId;
+  final String disputeCode;
+  final String orderNumber;
+  final String complainant;
+  final String respondent;
+  final double claimAmount;
+  final String reason;
+  String status; // 'Active', 'In Arbitration', 'Resolved'
+  final String filedDate;
+  final double escrowFrozenAmount;
+  final int evidenceDocsCount;
+
+  TradeDisputeModel({
+    required this.disputeId,
+    required this.disputeCode,
+    required this.orderNumber,
+    required this.complainant,
+    required this.respondent,
+    required this.claimAmount,
+    required this.reason,
+    required this.status,
+    required this.filedDate,
+    required this.escrowFrozenAmount,
+    required this.evidenceDocsCount,
+  });
+}
+
+class PortCongestionModel {
+  final String portCode;
+  final String portName;
+  final String country;
+  final double dwellDays;
+  final int berthQueueCount;
+  final String congestionLevel; // 'Optimal', 'Normal', 'Moderate', 'Severe'
+  final String weatherWarning;
+  final double bunkerFuelPrice;
+
+  PortCongestionModel({
+    required this.portCode,
+    required this.portName,
+    required this.country,
+    required this.dwellDays,
+    required this.berthQueueCount,
+    required this.congestionLevel,
+    required this.weatherWarning,
+    required this.bunkerFuelPrice,
+  });
+}
+
+class SanctionsScreeningRecord {
+  final String recordId;
+  final String entityName;
+  final String country;
+  final String entityType; // 'Buyer Company', 'Beneficiary Bank', 'Vessel Carrier'
+  final String riskLevel; // 'Low Risk (Passed)', 'Flagged (Due Diligence)', 'Sanctioned (Blocked)'
+  final String listsChecked;
+  final String clearanceToken;
+  final String timestamp;
+
+  SanctionsScreeningRecord({
+    required this.recordId,
+    required this.entityName,
+    required this.country,
+    required this.entityType,
+    required this.riskLevel,
+    required this.listsChecked,
+    required this.clearanceToken,
+    required this.timestamp,
+  });
+}
+
+class LetterOfCreditModel {
+  final String lcId;
+  final String lcNumber;
+  final String issuingBank;
+  final String applicant;
+  final String beneficiary;
+  final double amount;
+  final String currency;
+  final String expiryDate;
+  final String latestShipmentDate;
+  String status; // 'Active / Clean', 'Discrepancy Detected', 'Awaiting Amendment', 'Negotiated'
+  final List<String> discrepancies;
+  final String incoterm;
+
+  LetterOfCreditModel({
+    required this.lcId,
+    required this.lcNumber,
+    required this.issuingBank,
+    required this.applicant,
+    required this.beneficiary,
+    required this.amount,
+    required this.currency,
+    required this.expiryDate,
+    required this.latestShipmentDate,
+    required this.status,
+    required this.discrepancies,
+    required this.incoterm,
+  });
+}
+
+class FreightCalculationModel {
+  final String routeId;
+  final String origin;
+  final String destination;
+  final double ratePerTeu;
+  final int transitDays;
+  final String carrier;
+  final String mode; // 'FCL Sea', 'LCL Sea', 'Air Express'
+
+  FreightCalculationModel({
+    required this.routeId,
+    required this.origin,
+    required this.destination,
+    required this.ratePerTeu,
+    required this.transitDays,
+    required this.carrier,
+    required this.mode,
+  });
+}
+
+class QualityInspectionModel {
+  final String inspectionId;
+  final String orderNumber;
+  final String factory;
+  final String product;
+  final int lotQuantity;
+  final int sampleSize;
+  final int criticalDefects;
+  final int majorDefects;
+  final int minorDefects;
+  final String agency; // 'SGS', 'Bureau Veritas', 'Intertek'
+  String result; // 'Passed (AQL 2.5)', 'Conditional Release', 'Rejected / Re-audit'
+  final String inspectionDate;
+  final String certificateNumber;
+
+  QualityInspectionModel({
+    required this.inspectionId,
+    required this.orderNumber,
+    required this.factory,
+    required this.product,
+    required this.lotQuantity,
+    required this.sampleSize,
+    required this.criticalDefects,
+    required this.majorDefects,
+    required this.minorDefects,
+    required this.agency,
+    required this.result,
+    required this.inspectionDate,
+    required this.certificateNumber,
+  });
+}
+
+class MarineInsurancePolicyModel {
+  final String policyId;
+  final String policyNumber;
+  final String underwriter;
+  final String orderNumber;
+  final double cifValue;
+  final double insuredAmount;
+  final String clause;
+  final double premiumAmount;
+  String status;
+  final String certificateUrl;
+
+  MarineInsurancePolicyModel({
+    required this.policyId,
+    required this.policyNumber,
+    required this.underwriter,
+    required this.orderNumber,
+    required this.cifValue,
+    required this.insuredAmount,
+    required this.clause,
+    required this.premiumAmount,
+    required this.status,
+    required this.certificateUrl,
+  });
+}
+
+class FtaTariffRouteModel {
+  final String routeId;
+  final String agreementName;
+  final String originCountry;
+  final String destinationCountry;
+  final String hsCode;
+  final String productDescription;
+  final double mfnDutyRate;
+  final double ftaDutyRate;
+  final double estimatedSavingsPerTeu;
+  final String certificateOfOriginForm;
+
+  FtaTariffRouteModel({
+    required this.routeId,
+    required this.agreementName,
+    required this.originCountry,
+    required this.destinationCountry,
+    required this.hsCode,
+    required this.productDescription,
+    required this.mfnDutyRate,
+    required this.ftaDutyRate,
+    required this.estimatedSavingsPerTeu,
+    required this.certificateOfOriginForm,
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class CalendarTasksScreen extends StatefulWidget {
   const CalendarTasksScreen({super.key});
@@ -22,28 +23,69 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Add Daily Broker Task'),
+          backgroundColor: context.cardColor,
+          title: Text(
+            'Add Daily Broker Task',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.textPrimary),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Task Title', border: OutlineInputBorder())),
+              TextField(
+                controller: titleController,
+                style: TextStyle(fontSize: 13, color: context.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Task Title',
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: context.borderColor),
+                  ),
+                ),
+              ),
               const SizedBox(height: 10),
-              TextField(controller: timeController, decoration: const InputDecoration(labelText: 'Scheduled Time', border: OutlineInputBorder())),
+              TextField(
+                controller: timeController,
+                style: TextStyle(fontSize: 13, color: context.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Scheduled Time',
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: context.borderColor),
+                  ),
+                ),
+              ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 initialValue: priority,
-                decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 'Normal', child: Text('Normal Priority')),
-                  DropdownMenuItem(value: 'High', child: Text('High Priority')),
-                  DropdownMenuItem(value: 'Urgent', child: Text('Urgent Deadline')),
+                dropdownColor: context.cardColor,
+                style: TextStyle(fontSize: 13, color: context.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Priority',
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: context.borderColor),
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem(value: 'Normal', child: Text('Normal Priority', style: TextStyle(color: context.textPrimary))),
+                  DropdownMenuItem(value: 'High', child: Text('High Priority', style: TextStyle(color: context.textPrimary))),
+                  DropdownMenuItem(value: 'Urgent', child: Text('Urgent Deadline', style: TextStyle(color: context.textPrimary))),
                 ],
                 onChanged: (val) => setDialogState(() => priority = val!),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: TextStyle(color: context.textSecondary)),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (titleController.text.isNotEmpty) {
@@ -60,6 +102,10 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
                   Navigator.pop(ctx);
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tradeTeal,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Add Task'),
             ),
           ],
@@ -71,9 +117,10 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: context.canvasColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -86,6 +133,7 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
         ),
         title: const Text('Calendar & Tasks'),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: const Icon(Icons.add_task),
             onPressed: _showAddTaskDialog,
@@ -101,23 +149,23 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'October 2026',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.textPrimary),
                       ),
                       Row(
                         children: [
-                          IconButton(icon: const Icon(Icons.chevron_left), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.chevron_right), onPressed: () {}),
+                          IconButton(icon: Icon(Icons.chevron_left, color: context.textPrimary), onPressed: () {}),
+                          IconButton(icon: Icon(Icons.chevron_right, color: context.textPrimary), onPressed: () {}),
                         ],
                       ),
                     ],
@@ -140,9 +188,9 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
                   const SizedBox(height: 12),
 
                   // Calendar Grid Sample (2 weeks around 14th)
-                  _buildCalendarWeek([5, 6, 7, 8, 9, 10, 11]),
+                  _buildCalendarWeek([5, 6, 7, 8, 9, 10, 11], context, isDark),
                   const SizedBox(height: 8),
-                  _buildCalendarWeek([12, 13, 14, 15, 16, 17, 18], isSelectedRow: true),
+                  _buildCalendarWeek([12, 13, 14, 15, 16, 17, 18], context, isDark, isSelectedRow: true),
                 ],
               ),
             ),
@@ -152,9 +200,9 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildLegendItem('Shipment ETA', AppColors.oceanBlue),
-                _buildLegendItem('LC Expiry', AppColors.alertRed),
-                _buildLegendItem('Payment Wire', AppColors.successGreen),
+                _buildLegendItem('Shipment ETA', AppColors.oceanBlue, context),
+                _buildLegendItem('LC Expiry', AppColors.alertRed, context),
+                _buildLegendItem('Payment Wire', AppColors.successGreen, context),
               ],
             ),
             const SizedBox(height: 20),
@@ -163,9 +211,9 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Today's Schedule & Tasks",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.textPrimary),
                 ),
                 Text(
                   '${state.tasks.where((t) => t.isDone).length} of ${state.tasks.length} Completed',
@@ -175,20 +223,21 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
             ),
             const SizedBox(height: 10),
 
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+            Material(
+              color: context.cardColor,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                side: BorderSide(color: context.borderColor),
               ),
+              clipBehavior: Clip.antiAlias,
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: state.tasks.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => Divider(height: 1, color: context.borderColor),
                 itemBuilder: (context, index) {
                   final task = state.tasks[index];
-                  return _buildTaskTile(task, state);
+                  return _buildTaskTile(task, state, context);
                 },
               ),
             ),
@@ -198,7 +247,7 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
     );
   }
 
-  Widget _buildCalendarWeek(List<int> days, {bool isSelectedRow = false}) {
+  Widget _buildCalendarWeek(List<int> days, BuildContext context, bool isDark, {bool isSelectedRow = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: days.map((day) {
@@ -213,7 +262,9 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
             width: 38,
             height: 48,
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.deepNavy : Colors.transparent,
+              color: isSelected
+                  ? (isDark ? AppColors.tradeTeal : AppColors.deepNavy)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -224,7 +275,7 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.deepNavy,
+                    color: isSelected ? Colors.white : context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -244,17 +295,17 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(String label, Color color, BuildContext context) {
     return Row(
       children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 5),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+        Text(label, style: TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
     );
   }
 
-  Widget _buildTaskTile(TaskItemModel task, TradeState state) {
+  Widget _buildTaskTile(TaskItemModel task, TradeState state, BuildContext context) {
     Color priorityColor;
     if (task.priority == 'Urgent') {
       priorityColor = AppColors.alertRed;
@@ -273,15 +324,15 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: task.isDone ? AppColors.textSecondaryLight : AppColors.deepNavy,
+          color: task.isDone ? context.textSecondary : context.textPrimary,
           decoration: task.isDone ? TextDecoration.lineThrough : null,
         ),
       ),
       subtitle: Row(
         children: [
-          Icon(Icons.access_time, size: 12, color: AppColors.textSecondaryLight),
+          Icon(Icons.access_time, size: 12, color: context.textSecondary),
           const SizedBox(width: 4),
-          Text(task.scheduledTime, style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+          Text(task.scheduledTime, style: TextStyle(fontSize: 11, color: context.textSecondary)),
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),

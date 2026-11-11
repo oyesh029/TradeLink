@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '../deal_cycle/10_quotation_builder_screen.dart';
 
 class ProductCatalogScreen extends StatefulWidget {
@@ -16,49 +17,62 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
   String _searchQuery = '';
 
   void _attachToQuotation(ProductModel product) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add to Active Quotation?'),
-        content: Column(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              product.productName,
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.tealTint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.calculate_outlined, color: AppColors.tradeTeal, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Attach to Quotation', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+                      Text('${product.productName} • HS ${product.hsCode}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight)),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             Text(
-              'HS Code: ${product.hsCode} • Indicative: \$${product.indicativePrice.toStringAsFixed(2)}/${product.unit}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+              'Indicative Rate: \$${product.indicativePrice.toStringAsFixed(2)} / ${product.unit}\nDirect Supplier: ${product.supplierName}',
+              style: const TextStyle(fontSize: 13, height: 1.4),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Attach item directly to active draft Quotation Q-1042?',
-              style: TextStyle(fontSize: 13),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QuotationBuilderScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tradeTeal,
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Open Quotation Builder (CIF / FOB)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QuotationBuilderScreen()),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${product.productName} added to Quotation Q-1042 line items!'),
-                  backgroundColor: AppColors.successGreen,
-                ),
-              );
-            },
-            child: const Text('Add to Quote'),
-          ),
-        ],
       ),
     );
   }
@@ -66,10 +80,16 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
   @override
   Widget build(BuildContext context) {
     final state = TradeStateInherited.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final surfaceBg = isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9);
 
     final filteredProducts = state.products.where((p) {
       final matchesSearch = p.productName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          p.hsCode.contains(_searchQuery) ||
+          p.hsCode.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           p.sku.toLowerCase().contains(_searchQuery.toLowerCase());
       if (!matchesSearch) return false;
       if (_selectedCategory == 'All') return true;
@@ -77,7 +97,7 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -89,24 +109,31 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
           },
         ),
         title: const Text('Traded Products Catalog'),
+        actions: const [
+          ThemeToggleButton(transparentBackground: true),
+          SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
           // Search & Category Bar
           Container(
-            color: Colors.white,
+            color: cardBg,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 TextField(
                   onChanged: (val) => setState(() => _searchQuery = val),
+                  style: TextStyle(color: textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search product name, SKU, or HS code...',
-                    prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondaryLight),
+                    hintStyle: TextStyle(color: textSecondary),
+                    prefixIcon: Icon(Icons.search, size: 20, color: textSecondary),
                     filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
+                    fillColor: surfaceBg,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -114,15 +141,15 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildCatChip('All'),
+                      _buildCatChip('All', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Electronics'),
+                      _buildCatChip('Electronics', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Textiles'),
+                      _buildCatChip('Textiles', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Food'),
+                      _buildCatChip('Food', cardBg, borderColor, textSecondary),
                       const SizedBox(width: 8),
-                      _buildCatChip('Steel'),
+                      _buildCatChip('Steel', cardBg, borderColor, textSecondary),
                     ],
                   ),
                 ),
@@ -143,7 +170,7 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
               itemCount: filteredProducts.length,
               itemBuilder: (context, index) {
                 final product = filteredProducts[index];
-                return _buildProductCard(product);
+                return _buildProductCard(product, cardBg, borderColor, textPrimary, textSecondary);
               },
             ),
           ),
@@ -152,35 +179,35 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
     );
   }
 
-  Widget _buildCatChip(String label) {
+  Widget _buildCatChip(String label, Color cardBg, Color borderColor, Color textSecondary) {
     final isSelected = _selectedCategory == label;
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : Colors.white,
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.deepNavy : const Color(0xFFCBD5E1)),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProductCard(ProductModel p) {
+  Widget _buildProductCard(ProductModel p, Color cardBg, Color borderColor, Color textPrimary, Color textSecondary) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -242,12 +269,12 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
                   p.productName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textPrimary),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   p.supplierName,
-                  style: const TextStyle(fontSize: 10, color: AppColors.textSecondaryLight),
+                  style: TextStyle(fontSize: 10, color: textSecondary),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -256,7 +283,7 @@ class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Indicative Price', style: TextStyle(fontSize: 9, color: AppColors.textSecondaryLight)),
+                        Text('Indicative Price', style: TextStyle(fontSize: 9, color: textSecondary)),
                         Text(
                           '\$${p.indicativePrice.toStringAsFixed(2)}/${p.unit}',
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.tradeTeal),

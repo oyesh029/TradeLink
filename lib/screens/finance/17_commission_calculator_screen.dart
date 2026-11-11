@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class CommissionCalculatorScreen extends StatefulWidget {
   const CommissionCalculatorScreen({super.key});
@@ -9,30 +10,35 @@ class CommissionCalculatorScreen extends StatefulWidget {
 }
 
 class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen> {
-  final _dealValueController = TextEditingController(text: '42000');
-  double _sliderRate = 3.0;
+  final _dealValueController = TextEditingController(text: '48000');
+  double _sliderRate = 2.5;
   String _selectedModel = 'Percentage';
 
   void _applyPreset(double rate) {
-    setState(() {
-      _sliderRate = rate;
-    });
+    setState(() => _sliderRate = rate);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dealValue = double.tryParse(_dealValueController.text) ?? 42000.0;
+    final dealValue = double.tryParse(_dealValueController.text) ?? 0.0;
     final grossCommission = dealValue * (_sliderRate / 100);
-    final platformFee = grossCommission * 0.10;
-    const taxWithheld = 0.0;
+    final platformFee = grossCommission * 0.10; // 10% TradeLink broker split
+    final taxWithheld = 0.0; // 0% cross-border export exemption
     final netCommission = grossCommission - platformFee - taxWithheld;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark ? AppColors.borderDark : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.deepNavy;
+    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final surfaceBg = isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC);
+
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
-          tooltip: 'Back to Dashboard',
+          tooltip: 'Back',
           onPressed: () {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
@@ -40,6 +46,10 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
           },
         ),
         title: const Text('Commission Calculator'),
+        actions: const [
+          ThemeToggleButton(transparentBackground: true),
+          SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -50,42 +60,43 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Enter Total Deal Value (USD)',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy)),
+                  Text('Enter Total Deal Value (USD)',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textPrimary)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _dealValueController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textPrimary),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.attach_money, color: AppColors.tradeTeal),
                       filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
+                      fillColor: surfaceBg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Model Selection Chips
-                  const Text('Commission Pricing Model',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.deepNavy)),
+                  Text('Commission Pricing Model',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      _buildModelChip('Percentage'),
+                      _buildModelChip('Percentage', cardBg, borderColor, textPrimary, textSecondary),
                       const SizedBox(width: 8),
-                      _buildModelChip('Fixed Flat'),
+                      _buildModelChip('Fixed Flat', cardBg, borderColor, textPrimary, textSecondary),
                       const SizedBox(width: 8),
-                      _buildModelChip('Tiered Volume'),
+                      _buildModelChip('Tiered Volume', cardBg, borderColor, textPrimary, textSecondary),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -94,7 +105,7 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Commission Rate', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Commission Rate', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary)),
                       Text('${_sliderRate.toStringAsFixed(1)}%',
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.tradeTeal)),
                     ],
@@ -105,6 +116,7 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
                     max: 10.0,
                     divisions: 18,
                     activeColor: AppColors.tradeTeal,
+                    inactiveColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
                     onChanged: (val) => setState(() => _sliderRate = val),
                   ),
 
@@ -112,11 +124,11 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildPresetBtn(1.0),
-                      _buildPresetBtn(2.0),
-                      _buildPresetBtn(3.0),
-                      _buildPresetBtn(5.0),
-                      _buildPresetBtn(7.5),
+                      _buildPresetBtn(1.0, cardBg, borderColor, textPrimary),
+                      _buildPresetBtn(2.0, cardBg, borderColor, textPrimary),
+                      _buildPresetBtn(3.0, cardBg, borderColor, textPrimary),
+                      _buildPresetBtn(5.0, cardBg, borderColor, textPrimary),
+                      _buildPresetBtn(7.5, cardBg, borderColor, textPrimary),
                     ],
                   ),
                 ],
@@ -128,15 +140,15 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Fee Breakdown & Payout',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+                  Text('Fee Breakdown & Payout',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textPrimary)),
                   const SizedBox(height: 18),
 
                   Row(
@@ -147,12 +159,12 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
                         height: 100,
                         child: CustomPaint(
                           painter: _DonutChartPainter(),
-                          child: const Center(
+                          child: Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('90%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.tradeTeal)),
-                                Text('Net', style: TextStyle(fontSize: 10, color: AppColors.textSecondaryLight)),
+                                const Text('90%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.tradeTeal)),
+                                Text('Net', style: TextStyle(fontSize: 10, color: textSecondary)),
                               ],
                             ),
                           ),
@@ -164,12 +176,12 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
                       Expanded(
                         child: Column(
                           children: [
-                            _buildBreakdownRow('Gross Commission', '\$${grossCommission.toStringAsFixed(2)}', AppColors.deepNavy),
+                            _buildBreakdownRow('Gross Commission', '\$${grossCommission.toStringAsFixed(2)}', textPrimary),
                             const SizedBox(height: 6),
                             _buildBreakdownRow('Platform Fee (10%)', '-\$${platformFee.toStringAsFixed(2)}', AppColors.alertRed),
                             const SizedBox(height: 6),
-                            _buildBreakdownRow('Tax Withheld (0%)', '\$${taxWithheld.toStringAsFixed(2)}', AppColors.textSecondaryLight),
-                            const Divider(height: 16),
+                            _buildBreakdownRow('Tax Withheld (0%)', '\$${taxWithheld.toStringAsFixed(2)}', textSecondary),
+                            Divider(height: 16, color: borderColor),
                             _buildBreakdownRow('Net Payout (90%)', '\$${netCommission.toStringAsFixed(2)}', AppColors.tradeTeal, isBold: true),
                           ],
                         ),
@@ -205,57 +217,73 @@ class _CommissionCalculatorScreenState extends State<CommissionCalculatorScreen>
     );
   }
 
-  Widget _buildModelChip(String model) {
+  Widget _buildModelChip(String model, Color cardBg, Color borderColor, Color textPrimary, Color textSecondary) {
     final isSelected = _selectedModel == model;
     return GestureDetector(
       onTap: () => setState(() => _selectedModel = model),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : const Color(0xFFF1F5F9),
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
           model,
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+            color: isSelected ? Colors.white : textSecondary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPresetBtn(double rate) {
+  Widget _buildPresetBtn(double rate, Color cardBg, Color borderColor, Color textPrimary) {
     final isSelected = _sliderRate == rate;
     return InkWell(
       onTap: () => _applyPreset(rate),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.tradeTeal : const Color(0xFFF1F5F9),
+          color: isSelected ? AppColors.tradeTeal : cardBg,
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isSelected ? AppColors.tradeTeal : borderColor),
         ),
         child: Text(
-          '${rate.toStringAsFixed(rate == 7.5 ? 1 : 0)}%',
+          '${rate.toStringAsFixed(rate % 1 == 0 ? 0 : 1)}%',
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : AppColors.deepNavy,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? Colors.white : textPrimary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBreakdownRow(String label, String value, Color color, {bool isBold = false}) {
+  Widget _buildBreakdownRow(String label, String value, Color valColor, {bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: isBold ? 13 : 11, fontWeight: isBold ? FontWeight.w700 : FontWeight.w500)),
-        Text(value, style: TextStyle(fontSize: isBold ? 14 : 12, fontWeight: FontWeight.w800, color: color)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+            color: valColor,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+            color: valColor,
+          ),
+        ),
       ],
     );
   }
@@ -265,32 +293,42 @@ class _DonutChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    final radius = size.width / 2 - 8;
+    const strokeWidth = 14.0;
+
+    final bgPaint = Paint()
+      ..color = const Color(0xFFE2E8F0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
 
     final netPaint = Paint()
       ..color = AppColors.tradeTeal
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 14;
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
     final feePaint = Paint()
       ..color = AppColors.alertRed
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 14;
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
-    // 90% net arc (324 degrees = 5.65 radians)
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // 90% Net Slice (324 degrees)
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - 7),
-      -1.57,
-      5.65,
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // Start at -90 deg (12 o'clock)
+      5.6548,  // 0.90 * 2 * pi
       false,
       netPaint,
     );
 
-    // 10% fee arc (36 degrees = 0.63 radians)
+    // 10% Fee Slice
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - 7),
-      4.08,
-      0.63,
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708 + 5.6548,
+      0.6283, // 0.10 * 2 * pi
       false,
       feePaint,
     );

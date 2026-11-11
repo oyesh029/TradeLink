@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../database/local_database_service.dart';
 import '../models/trade_models.dart';
 import '../theme/app_colors.dart';
 
@@ -6,17 +7,69 @@ class TradeState extends ChangeNotifier {
   // Current Logged-in User
   UserProfile currentUser = UserProfile(
     userId: 'usr-001',
-    fullName: 'Awais Khan',
+    fullName: 'Awais Ahmad',
     email: 'awais@tradelink.pk',
-    companyName: 'Khan Trading Co.',
-    phone: '+92 300 1234567',
+    companyName: 'Noor Trader',
+    phone: '03226808199',
     role: UserRole.agent,
     accountTier: 'Premium Agent',
   );
 
   bool isAuthenticated = false;
 
+  bool get isDarkMode => currentUser.darkMode;
+
+  Future<void> initDatabase() async {
+    await LocalDatabaseService.instance.initialize();
+    final savedDark = await LocalDatabaseService.instance.getThemePreference();
+    currentUser.darkMode = savedDark;
+
+    // Load active traders / clients from local DB
+    final dbClients = await LocalDatabaseService.instance.getAllClients();
+    if (dbClients.isNotEmpty) {
+      clients = dbClients;
+    }
+    notifyListeners();
+  }
+
+  Future<void> toggleDarkMode() async {
+    currentUser.darkMode = !currentUser.darkMode;
+    notifyListeners();
+    await LocalDatabaseService.instance.saveThemePreference(currentUser.darkMode);
+  }
+
+  Future<void> setDarkMode(bool value) async {
+    currentUser.darkMode = value;
+    notifyListeners();
+    await LocalDatabaseService.instance.saveThemePreference(value);
+  }
+
   void login({required String email, required String password}) {
+    isAuthenticated = true;
+    notifyListeners();
+  }
+
+  Future<bool> authenticateWithLocalDb({
+    required String email,
+    required String password,
+    UserRole? role,
+  }) async {
+    final profile = await LocalDatabaseService.instance.authenticateUser(
+      email: email,
+      password: password,
+      expectedRole: role,
+    );
+    if (profile != null) {
+      currentUser = profile;
+      isAuthenticated = true;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  void setCurrentUser(UserProfile user) {
+    currentUser = user;
     isAuthenticated = true;
     notifyListeners();
   }
@@ -25,7 +78,7 @@ class TradeState extends ChangeNotifier {
     currentUser = UserProfile(
       userId: 'usr-001',
       fullName: role == UserRole.agent
-          ? 'Awais Khan'
+          ? 'Awais Ahmad'
           : role == UserRole.importer
               ? 'Ahmed Al Noor'
               : role == UserRole.exporter
@@ -39,18 +92,81 @@ class TradeState extends ChangeNotifier {
                   ? 'sales@shenzhentech.cn'
                   : 'admin@tradelink.pk',
       companyName: role == UserRole.agent
-          ? 'Khan Trading Brokerage'
+          ? 'Noor Trader'
           : role == UserRole.importer
               ? 'Al Noor Traders LLC'
               : role == UserRole.exporter
                   ? 'Shenzhen Tech Ltd'
                   : 'TradeLink HQ',
-      phone: '+92 300 1234567',
+      phone: '03226808199',
       role: role,
       accountTier: role == UserRole.agent ? 'Premium Agent' : 'Verified Enterprise',
     );
     isAuthenticated = true;
     notifyListeners();
+  }
+
+  Future<void> updateUserProfile({
+    required String fullName,
+    required String companyName,
+    required String phone,
+    required String email,
+  }) async {
+    currentUser = UserProfile(
+      userId: currentUser.userId,
+      fullName: fullName,
+      email: email,
+      companyName: companyName,
+      phone: phone,
+      role: currentUser.role,
+      accountTier: currentUser.accountTier,
+      pushNotifications: currentUser.pushNotifications,
+      faceIdLogin: currentUser.faceIdLogin,
+      darkMode: currentUser.darkMode,
+      emailReports: currentUser.emailReports,
+      preferredLanguage: currentUser.preferredLanguage,
+      defaultCurrency: currentUser.defaultCurrency,
+    );
+    notifyListeners();
+    await LocalDatabaseService.instance.updateUserCredentials(
+      userId: currentUser.userId,
+      newPhone: phone,
+      newEmail: email,
+      newFullName: fullName,
+      newCompanyName: companyName,
+    );
+  }
+
+  Future<bool> updateCredentials({
+    required String newPhone,
+    required String newEmail,
+    required String newPassword,
+  }) async {
+    final success = await LocalDatabaseService.instance.updateUserCredentials(
+      userId: currentUser.userId,
+      newPhone: newPhone,
+      newEmail: newEmail,
+      newPassword: newPassword,
+    );
+    if (success) {
+      currentUser = UserProfile(
+        userId: currentUser.userId,
+        fullName: currentUser.fullName,
+        email: newEmail,
+        companyName: currentUser.companyName,
+        phone: newPhone,
+        role: currentUser.role,
+        accountTier: currentUser.accountTier,
+        pushNotifications: currentUser.pushNotifications,
+        faceIdLogin: currentUser.faceIdLogin,
+        darkMode: currentUser.darkMode,
+        emailReports: currentUser.emailReports,
+        preferredLanguage: currentUser.preferredLanguage,
+        defaultCurrency: currentUser.defaultCurrency,
+      );
+      notifyListeners();
+    }
+    return success;
   }
 
   void logout() {
@@ -151,9 +267,16 @@ class TradeState extends ChangeNotifier {
     ),
   ];
 
-  void addClient(ClientModel client) {
+  Future<void> addClient(ClientModel client) async {
     clients.insert(0, client);
     notifyListeners();
+    await LocalDatabaseService.instance.saveClient(client);
+  }
+
+  Future<void> removeClient(String clientId) async {
+    clients.removeWhere((c) => c.clientId == clientId);
+    notifyListeners();
+    await LocalDatabaseService.instance.deleteClient(clientId);
   }
 
   // Suppliers Directory
@@ -379,7 +502,7 @@ class TradeState extends ChangeNotifier {
     ),
     ChatMessageModel(
       messageId: 'msg-003',
-      senderName: 'Awais Khan (Agent)',
+      senderName: 'Awais Ahmad (Agent)',
       isFromMe: true,
       text: 'I have structured the revised counter-offer card below for both parties to confirm.',
       counterOffer: CounterOfferCard(
@@ -402,7 +525,7 @@ class TradeState extends ChangeNotifier {
     }
     chatMessages.add(ChatMessageModel(
       messageId: 'msg-${DateTime.now().millisecondsSinceEpoch}',
-      senderName: 'Awais Khan (Agent)',
+      senderName: 'Awais Ahmad (Agent)',
       isFromMe: true,
       text: 'Counter-offer accepted! Generating confirmed Purchase Contract ORD-5531 and escrow deposit link.',
       timestamp: DateTime.now(),
@@ -575,6 +698,41 @@ class TradeState extends ChangeNotifier {
   void addDocument(TradeDocumentModel doc) {
     documents.insert(0, doc);
     notifyListeners();
+    LocalDatabaseService.instance.saveDocument(doc);
+  }
+
+  void updateDocument(
+    String docId, {
+    required String title,
+    required String fileName,
+    required String category,
+    required String status,
+    String? orderNumber,
+    int? sizeKb,
+  }) {
+    final index = documents.indexWhere((d) => d.docId == docId);
+    if (index != -1) {
+      final old = documents[index];
+      final updated = TradeDocumentModel(
+        docId: docId,
+        title: title,
+        fileName: fileName,
+        category: category,
+        sizeKb: sizeKb ?? old.sizeKb,
+        status: status,
+        uploadDate: old.uploadDate,
+        orderNumber: orderNumber ?? old.orderNumber,
+      );
+      documents[index] = updated;
+      notifyListeners();
+      LocalDatabaseService.instance.saveDocument(updated);
+    }
+  }
+
+  void deleteDocument(String docId) {
+    documents.removeWhere((d) => d.docId == docId);
+    notifyListeners();
+    LocalDatabaseService.instance.deleteDocument(docId);
   }
 
   // Customs & HS Codes
@@ -720,6 +878,11 @@ class TradeState extends ChangeNotifier {
     ),
   ];
 
+  void addInvoice(InvoiceModel inv) {
+    invoices.insert(0, inv);
+    notifyListeners();
+  }
+
   // Payments & Escrow State
   double escrowBalance = 32400.0;
   double escrowReleasedPct = 50.0;
@@ -851,6 +1014,335 @@ class TradeState extends ChangeNotifier {
 
   void addTask(TaskItemModel task) {
     tasks.add(task);
+    notifyListeners();
+  }
+
+  // Trade Disputes Docket
+  List<TradeDisputeModel> disputes = [
+    TradeDisputeModel(
+      disputeId: 'disp-001',
+      disputeCode: 'DISP-902',
+      orderNumber: 'ORD-5531',
+      complainant: 'Al Noor Traders LLC',
+      respondent: 'Shenzhen Tech Ltd',
+      claimAmount: 8400.0,
+      reason: 'Quality Inspection Variance - 500 LED panels defective',
+      status: 'Active',
+      filedDate: '14 Oct 2026',
+      escrowFrozenAmount: 8400.0,
+      evidenceDocsCount: 4,
+    ),
+    TradeDisputeModel(
+      disputeId: 'disp-002',
+      disputeCode: 'DISP-901',
+      orderNumber: 'ORD-5512',
+      complainant: 'Hamburg Goods GmbH',
+      respondent: 'Shenzhen Tech Ltd',
+      claimAmount: 2150.0,
+      reason: 'Demurrage & Detention Delay at Karachi Port',
+      status: 'In Arbitration',
+      filedDate: '08 Oct 2026',
+      escrowFrozenAmount: 2150.0,
+      evidenceDocsCount: 3,
+    ),
+    TradeDisputeModel(
+      disputeId: 'disp-003',
+      disputeCode: 'DISP-899',
+      orderNumber: 'ORD-5490',
+      complainant: 'Gulf Builders Corp',
+      respondent: 'Karachi Mills Ltd',
+      claimAmount: 14200.0,
+      reason: 'Short Shipment in 40ft Container',
+      status: 'Resolved',
+      filedDate: '28 Sep 2026',
+      escrowFrozenAmount: 0.0,
+      evidenceDocsCount: 6,
+    ),
+  ];
+
+  // Maritime Port Radar & Global Dwell Times
+  List<PortCongestionModel> ports = [
+    PortCongestionModel(
+      portCode: 'PKQAS',
+      portName: 'Port Qasim & Karachi',
+      country: 'Pakistan',
+      dwellDays: 3.2,
+      berthQueueCount: 6,
+      congestionLevel: 'Normal',
+      weatherWarning: 'Clear • Light swell 0.8m',
+      bunkerFuelPrice: 590.0,
+    ),
+    PortCongestionModel(
+      portCode: 'AEJEA',
+      portName: 'Jebel Ali Port (Dubai)',
+      country: 'UAE',
+      dwellDays: 1.8,
+      berthQueueCount: 2,
+      congestionLevel: 'Optimal',
+      weatherWarning: 'Calm sea • Visibility 10nm',
+      bunkerFuelPrice: 575.0,
+    ),
+    PortCongestionModel(
+      portCode: 'CNSHA',
+      portName: 'Port of Shanghai',
+      country: 'China',
+      dwellDays: 4.5,
+      berthQueueCount: 18,
+      congestionLevel: 'Moderate',
+      weatherWarning: 'Typhoon alert East China Sea',
+      bunkerFuelPrice: 620.0,
+    ),
+    PortCongestionModel(
+      portCode: 'CNNGB',
+      portName: 'Ningbo-Zhoushan',
+      country: 'China',
+      dwellDays: 2.9,
+      berthQueueCount: 9,
+      congestionLevel: 'Normal',
+      weatherWarning: 'Moderate gale warning',
+      bunkerFuelPrice: 615.0,
+    ),
+    PortCongestionModel(
+      portCode: 'DEHAM',
+      portName: 'Port of Hamburg',
+      country: 'Germany',
+      dwellDays: 5.1,
+      berthQueueCount: 14,
+      congestionLevel: 'Severe',
+      weatherWarning: 'Elbe river tidal delay',
+      bunkerFuelPrice: 645.0,
+    ),
+    PortCongestionModel(
+      portCode: 'NLRTM',
+      portName: 'Port of Rotterdam',
+      country: 'Netherlands',
+      dwellDays: 2.1,
+      berthQueueCount: 4,
+      congestionLevel: 'Optimal',
+      weatherWarning: 'North sea moderate swell 1.5m',
+      bunkerFuelPrice: 585.0,
+    ),
+  ];
+
+  // Sanctions & AML Screening Records
+  List<SanctionsScreeningRecord> sanctionsRecords = [
+    SanctionsScreeningRecord(
+      recordId: 'scr-001',
+      entityName: 'Al Noor Traders LLC',
+      country: 'United Arab Emirates',
+      entityType: 'Buyer Company',
+      riskLevel: 'Low Risk (Passed)',
+      listsChecked: 'OFAC SDN, UN 1267, EU Consolidated, FATF',
+      clearanceToken: 'AML-CLR-2026-9041',
+      timestamp: 'Today 10:30 AM',
+    ),
+    SanctionsScreeningRecord(
+      recordId: 'scr-002',
+      entityName: 'Shenzhen Tech Ltd',
+      country: 'China',
+      entityType: 'Manufacturer / Exporter',
+      riskLevel: 'Low Risk (Passed)',
+      listsChecked: 'OFAC, BIS Entity List, UN Sanctions, EU',
+      clearanceToken: 'AML-CLR-2026-9042',
+      timestamp: 'Yesterday 04:15 PM',
+    ),
+    SanctionsScreeningRecord(
+      recordId: 'scr-003',
+      entityName: 'Bank of Dubai Foreign Escrow',
+      country: 'UAE',
+      entityType: 'Beneficiary Bank',
+      riskLevel: 'Low Risk (Passed)',
+      listsChecked: 'SWIFT AML, FATF Grey List, Wolfsberg Group',
+      clearanceToken: 'AML-CLR-2026-8890',
+      timestamp: '12 Oct 2026',
+    ),
+    SanctionsScreeningRecord(
+      recordId: 'scr-004',
+      entityName: 'Caspian Heavy Transport LLC',
+      country: 'Restricted Region',
+      entityType: 'Vessel Carrier',
+      riskLevel: 'Flagged (Due Diligence)',
+      listsChecked: 'OFAC Maritime Advisory, UN Secondary Sanctions',
+      clearanceToken: 'AML-EDD-REQ-4410',
+      timestamp: '09 Oct 2026',
+    ),
+  ];
+
+  void fileDispute(TradeDisputeModel dispute) {
+    disputes.insert(0, dispute);
+    notifyListeners();
+  }
+
+  void resolveDispute(String disputeId, String resolutionStatus) {
+    for (var d in disputes) {
+      if (d.disputeId == disputeId) {
+        d.status = resolutionStatus;
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
+  void addSanctionsRecord(SanctionsScreeningRecord record) {
+    sanctionsRecords.insert(0, record);
+    notifyListeners();
+  }
+
+  // Letters of Credit (LC) Portfolio
+  List<LetterOfCreditModel> lettersOfCredit = [
+    LetterOfCreditModel(
+      lcId: 'lc-001',
+      lcNumber: 'LC-DXB-2026-8812',
+      issuingBank: 'Emirates NBD Dubai',
+      applicant: 'Al Noor Traders LLC (Dubai)',
+      beneficiary: 'Noor Trader / Awais Ahmad (Karachi)',
+      amount: 84500.0,
+      currency: 'USD',
+      expiryDate: '15 Nov 2026',
+      latestShipmentDate: '30 Oct 2026',
+      status: 'Active / Clean',
+      discrepancies: [],
+      incoterm: 'CIF Jebel Ali',
+    ),
+    LetterOfCreditModel(
+      lcId: 'lc-002',
+      lcNumber: 'LC-FRA-2026-4409',
+      issuingBank: 'Deutsche Bank Frankfurt',
+      applicant: 'Hamburg Goods GmbH',
+      beneficiary: 'Mumbai Spices & Grains',
+      amount: 42000.0,
+      currency: 'EUR',
+      expiryDate: '28 Oct 2026',
+      latestShipmentDate: '15 Oct 2026',
+      status: 'Discrepancy Detected',
+      discrepancies: [
+        'Port of Discharge differs: Bremerhaven stated instead of Hamburg',
+        'Stale Bill of Lading: presented 24 days after on-board date',
+      ],
+      incoterm: 'CFR Hamburg',
+    ),
+    LetterOfCreditModel(
+      lcId: 'lc-003',
+      lcNumber: 'LC-IST-2026-7731',
+      issuingBank: 'Isbank Istanbul',
+      applicant: 'Gulf Builders Corp',
+      beneficiary: 'Istanbul Steel A.S.',
+      amount: 112000.0,
+      currency: 'USD',
+      expiryDate: '10 Dec 2026',
+      latestShipmentDate: '20 Nov 2026',
+      status: 'Active / Clean',
+      discrepancies: [],
+      incoterm: 'FOB Istanbul',
+    ),
+  ];
+
+  // Freight Route Benchmarks
+  List<FreightCalculationModel> freightRoutes = [
+    FreightCalculationModel(
+      routeId: 'frt-001',
+      origin: 'Karachi Port (PKKHI)',
+      destination: 'Jebel Ali (AEJEA)',
+      ratePerTeu: 650.0,
+      transitDays: 4,
+      carrier: 'Maersk Line / Hapag-Lloyd',
+      mode: 'FCL Sea',
+    ),
+    FreightCalculationModel(
+      routeId: 'frt-002',
+      origin: 'Shanghai (CNSHA)',
+      destination: 'Karachi Port (PKKHI)',
+      ratePerTeu: 1450.0,
+      transitDays: 14,
+      carrier: 'COSCO Shipping',
+      mode: 'FCL Sea',
+    ),
+    FreightCalculationModel(
+      routeId: 'frt-003',
+      origin: 'Karachi (PKKHI)',
+      destination: 'Hamburg (DEHAM)',
+      ratePerTeu: 2150.0,
+      transitDays: 24,
+      carrier: 'MSC Mediterranean',
+      mode: 'FCL Sea',
+    ),
+    FreightCalculationModel(
+      routeId: 'frt-004',
+      origin: 'Karachi (KHI)',
+      destination: 'Dubai (DXB)',
+      ratePerTeu: 1.85,
+      transitDays: 1,
+      carrier: 'Emirates SkyCargo',
+      mode: 'Air Express',
+    ),
+  ];
+
+  // Quality Inspections & Pre-Shipment Audits
+  List<QualityInspectionModel> qualityInspections = [
+    QualityInspectionModel(
+      inspectionId: 'psi-001',
+      orderNumber: 'ORD-5531',
+      factory: 'Karachi Weaving Mill No. 4',
+      product: '100% Cotton Combed Yarn • Ne 30/1',
+      lotQuantity: 24000,
+      sampleSize: 315,
+      criticalDefects: 0,
+      majorDefects: 3,
+      minorDefects: 7,
+      agency: 'SGS Pakistan (Pvt) Ltd',
+      result: 'Passed (AQL 2.5)',
+      inspectionDate: '14 Oct 2026',
+      certificateNumber: 'SGS-PK-PSI-2026-904',
+    ),
+    QualityInspectionModel(
+      inspectionId: 'psi-002',
+      orderNumber: 'ORD-5530',
+      factory: 'Punjab Agri Processing Unit',
+      product: 'Super Basmati Rice 1121 Sella',
+      lotQuantity: 20000,
+      sampleSize: 315,
+      criticalDefects: 0,
+      majorDefects: 2,
+      minorDefects: 5,
+      agency: 'Bureau Veritas Quality',
+      result: 'Passed (AQL 2.5)',
+      inspectionDate: '08 Oct 2026',
+      certificateNumber: 'BV-AGRI-QC-8812',
+    ),
+    QualityInspectionModel(
+      inspectionId: 'psi-003',
+      orderNumber: 'ORD-5538',
+      factory: 'Shenzhen Microelectronics Plant',
+      product: 'Industrial Pressure Transmitters',
+      lotQuantity: 5000,
+      sampleSize: 200,
+      criticalDefects: 1,
+      majorDefects: 8,
+      minorDefects: 12,
+      agency: 'Intertek Inspection',
+      result: 'Rejected / Re-audit',
+      inspectionDate: 'Yesterday',
+      certificateNumber: 'INTK-REJ-2026-114',
+    ),
+  ];
+
+  void addLetterOfCredit(LetterOfCreditModel lc) {
+    lettersOfCredit.insert(0, lc);
+    notifyListeners();
+  }
+
+  void updateLcStatus(String lcId, String status) {
+    for (var lc in lettersOfCredit) {
+      if (lc.lcId == lcId) {
+        lc.status = status;
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
+  void addQualityInspection(QualityInspectionModel psi) {
+    qualityInspections.insert(0, psi);
     notifyListeners();
   }
 }

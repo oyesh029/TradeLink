@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../database/local_database_service.dart';
 import '../../models/trade_models.dart';
 import '../../state/trade_state.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '../shell/main_shell.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -12,8 +14,8 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _nameController = TextEditingController(text: 'Awais Khan');
-  final _companyController = TextEditingController(text: 'Khan Trading Co.');
+  final _nameController = TextEditingController(text: 'Awais Ahmad');
+  final _companyController = TextEditingController(text: 'Noor Trader');
   final _phoneController = TextEditingController(text: '+92 300 1234567');
   final _emailController = TextEditingController(text: 'awais@tradelink.pk');
   final _passwordController = TextEditingController(text: 'SecretPass123!');
@@ -23,14 +25,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    TradeState? tradeState;
+    try {
+      tradeState = TradeStateInherited.of(context);
+    } catch (_) {
+      tradeState = null;
+    }
+    final isDark = tradeState?.isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
+
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: isDark ? AppColors.canvasDark : AppColors.canvasLight,
       appBar: AppBar(
         title: const Text('Create TradeLink Account'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: const [
+          ThemeToggleButton(transparentBackground: true),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -56,32 +70,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 20),
 
               // Role Selector Cards
-              const Text(
+              Text(
                 'Select Business Role',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.deepNavy),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+                ),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
                   _buildRoleSelectorCard(
-                    title: 'Commission Agent',
-                    subtitle: 'Broker & Facilitator',
+                    title: 'Agent',
+                    subtitle: 'Broker & Deals',
                     icon: Icons.handshake_outlined,
                     role: UserRole.agent,
+                    isDark: isDark,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   _buildRoleSelectorCard(
                     title: 'Importer',
                     subtitle: 'Overseas Buyer',
                     icon: Icons.flight_land_outlined,
                     role: UserRole.importer,
+                    isDark: isDark,
                   ),
-                  const SizedBox(width: 10),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
                   _buildRoleSelectorCard(
                     title: 'Exporter',
-                    subtitle: 'Manufacturer / Seller',
+                    subtitle: 'Manufacturer',
                     icon: Icons.factory_outlined,
                     role: UserRole.exporter,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleSelectorCard(
+                    title: 'Administrator',
+                    subtitle: 'Full Governance',
+                    icon: Icons.admin_panel_settings_outlined,
+                    role: UserRole.admin,
+                    isDark: isDark,
                   ),
                 ],
               ),
@@ -91,9 +124,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppColors.cardDark : Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   children: [
@@ -101,12 +134,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       controller: _nameController,
                       label: 'Full Name',
                       icon: Icons.person_outline,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 14),
                     _buildTextField(
                       controller: _companyController,
                       label: 'Company Name',
                       icon: Icons.business_outlined,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 14),
                     _buildTextField(
@@ -114,6 +149,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       label: 'Mobile Number (+ country code)',
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 14),
                     _buildTextField(
@@ -121,6 +157,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       label: 'Business Email',
                       icon: Icons.mail_outline,
                       keyboardType: TextInputType.emailAddress,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 14),
                     _buildTextField(
@@ -128,6 +165,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       label: 'Password',
                       icon: Icons.lock_outline,
                       obscureText: true,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 10),
 
@@ -180,30 +218,39 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 16),
 
               // Checkbox Preferences
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
+              Material(
+                color: isDark ? AppColors.cardDark : Colors.white,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  side: BorderSide(color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
                 ),
-                child: Column(
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  child: Column(
                   children: [
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: _enableFaceId,
                       activeThumbColor: AppColors.tradeTeal,
-                      title: const Text(
+                      title: Text(
                         'Enable Biometric Face ID Login',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+                        ),
                       ),
-                      subtitle: const Text(
+                      subtitle: Text(
                         'Fast, cryptographic hardware-secured authentication',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
                       ),
                       onChanged: (val) => setState(() => _enableFaceId = val),
                     ),
-                    const Divider(),
+                    Divider(color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
                     Row(
                       children: [
                         Checkbox(
@@ -211,10 +258,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           activeColor: AppColors.tradeTeal,
                           onChanged: (val) => setState(() => _agreeTerms = val ?? false),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'I agree to TradeLink Terms of Service & Cross-Border Data Privacy Policy',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            ),
                           ),
                         ),
                       ],
@@ -222,19 +272,53 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
               // Submit Button
               ElevatedButton(
                 onPressed: _agreeTerms
-                    ? () {
-                        final state = TradeStateInherited.of(context);
-                        state.loginAsRole(_role);
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MainShell()),
-                          (route) => false,
+                    ? () async {
+                        final rawPassword = _passwordController.text.trim();
+                        final registeredPhone = _phoneController.text.trim();
+                        final registeredEmail = _emailController.text.trim();
+
+                        final newUser = UserProfile(
+                          userId: 'usr-${DateTime.now().millisecondsSinceEpoch}',
+                          fullName: _nameController.text.trim(),
+                          email: registeredEmail,
+                          companyName: _companyController.text.trim(),
+                          phone: registeredPhone,
+                          role: _role,
+                          accountTier: _role == UserRole.admin ? 'Superadmin' : 'Verified Enterprise',
+                          faceIdLogin: _enableFaceId,
                         );
+
+                        await LocalDatabaseService.instance.registerUser(
+                          newUser,
+                          rawPassword,
+                        );
+                        await LocalDatabaseService.instance.saveLastSelectedRole(_role);
+
+                        if (!context.mounted) return;
+                        final state = TradeStateInherited.of(context);
+                        state.setCurrentUser(newUser);
+
+                        // Pop back to Login Screen so user can sign in with newly created credentials
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context, {
+                            'registered': true,
+                            'phone': registeredPhone,
+                            'email': registeredEmail,
+                            'password': rawPassword,
+                            'role': _role,
+                          });
+                        } else {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MainShell()),
+                          );
+                        }
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
@@ -244,8 +328,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text(
-                  'Create Trade Account',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  'Create Trade Account & Proceed to Sign In',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -260,6 +344,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     required String subtitle,
     required IconData icon,
     required UserRole role,
+    required bool isDark,
   }) {
     final isSelected = _role == role;
     return Expanded(
@@ -268,10 +353,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.tealTint : Colors.white,
+            color: isSelected
+                ? (isDark ? AppColors.tradeTeal.withValues(alpha: 0.2) : AppColors.tealTint)
+                : (isDark ? AppColors.cardDark : Colors.white),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppColors.tradeTeal : const Color(0xFFE2E8F0),
+              color: isSelected ? AppColors.tradeTeal : (isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
               width: isSelected ? 1.8 : 1,
             ),
           ),
@@ -279,7 +366,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: [
               Icon(
                 icon,
-                color: isSelected ? AppColors.tradeTeal : AppColors.textSecondaryLight,
+                color: isSelected ? AppColors.tradeTeal : (isDark ? const Color(0xFF94A3B8) : AppColors.textSecondaryLight),
                 size: 24,
               ),
               const SizedBox(height: 8),
@@ -289,16 +376,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? AppColors.deepNavy : AppColors.textPrimaryLight,
+                  color: isSelected
+                      ? (isDark ? Colors.white : AppColors.deepNavy)
+                      : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.textSecondaryLight,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
               ),
             ],
@@ -312,6 +401,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    required bool isDark,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
@@ -320,26 +410,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.deepNavy),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.textPrimaryDark : AppColors.deepNavy,
+          ),
         ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
-          style: const TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: 14, color: isDark ? Colors.white : AppColors.deepNavy),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondaryLight),
+            prefixIcon: Icon(icon, size: 18, color: isDark ? const Color(0xFF94A3B8) : AppColors.textSecondaryLight),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: isDark ? const Color(0xFF131A2E) : const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+              borderSide: BorderSide(color: isDark ? const Color(0xFF2E3856) : const Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: isDark ? const Color(0xFF2E3856) : const Color(0xFFE2E8F0)),
             ),
           ),
         ),

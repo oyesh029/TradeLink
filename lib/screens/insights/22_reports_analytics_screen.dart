@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/theme_toggle_button.dart';
 
 class ReportsAnalyticsScreen extends StatefulWidget {
   const ReportsAnalyticsScreen({super.key});
@@ -15,15 +16,29 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Export Trade Intelligence Report'),
-        content: const Text('Generate aggregated business intelligence analytics covering conversion rate, country volume distribution, and broker earnings.'),
+        backgroundColor: context.cardColor,
+        title: Text(
+          'Export Trade Intelligence Report',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.textPrimary),
+        ),
+        content: Text(
+          'Generate aggregated business intelligence analytics covering conversion rate, country volume distribution, and broker earnings.',
+          style: TextStyle(fontSize: 13, color: context.textSecondary),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: TextStyle(color: context.textSecondary)),
+          ),
           OutlinedButton(
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported Excel (.xlsx) analytics dataset!')));
             },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: context.borderColor),
+              foregroundColor: context.textPrimary,
+            ),
             child: const Text('Excel'),
           ),
           ElevatedButton(
@@ -31,6 +46,10 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported Executive Trade PDF Report!')));
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.tradeTeal,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('PDF Report'),
           ),
         ],
@@ -40,8 +59,10 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Scaffold(
-      backgroundColor: AppColors.canvasLight,
+      backgroundColor: context.canvasColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
@@ -54,6 +75,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
         ),
         title: const Text('Reports & Analytics'),
         actions: [
+          const ThemeToggleButton(transparentBackground: true),
           IconButton(
             icon: const Icon(Icons.download_outlined),
             onPressed: _exportAnalytics,
@@ -69,15 +91,15 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  _buildPeriodTab('Week'),
-                  _buildPeriodTab('Month'),
-                  _buildPeriodTab('Quarter'),
-                  _buildPeriodTab('Year'),
+                  _buildPeriodTab('Week', isDark),
+                  _buildPeriodTab('Month', isDark),
+                  _buildPeriodTab('Quarter', isDark),
+                  _buildPeriodTab('Year', isDark),
                 ],
               ),
             ),
@@ -93,6 +115,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
                     '+6% vs Q2',
                     Icons.trending_up,
                     AppColors.tradeTeal,
+                    context,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -103,6 +126,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
                     'Target 3.0%',
                     Icons.percent,
                     AppColors.gold,
+                    context,
                   ),
                 ),
               ],
@@ -113,24 +137,24 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.military_tech, color: AppColors.gold, size: 28),
-                  SizedBox(width: 12),
+                  const Icon(Icons.military_tech, color: AppColors.gold, size: 28),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Top Client Organization', style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
-                        Text('Al Noor Traders LLC', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+                        Text('Top Client Organization', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                        Text('Al Noor Traders LLC', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: context.textPrimary)),
                       ],
                     ),
                   ),
-                  Text('\$240K GMV', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.tradeTeal)),
+                  const Text('\$240K GMV', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.tradeTeal)),
                 ],
               ),
             ),
@@ -140,15 +164,15 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Deal Volume by Month (Units)',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+                  Text('Deal Volume by Month (Units)',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: context.textPrimary)),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 120,
@@ -156,12 +180,12 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildBar('May', 0.5, '18'),
-                        _buildBar('Jun', 0.65, '24'),
-                        _buildBar('Jul', 0.6, '22'),
-                        _buildBar('Aug', 0.85, '31'),
-                        _buildBar('Sep', 0.9, '35'),
-                        _buildBar('Oct', 1.0, '48', isHighlight: true),
+                        _buildBar('May', 0.5, '18', context, isDark),
+                        _buildBar('Jun', 0.65, '24', context, isDark),
+                        _buildBar('Jul', 0.6, '22', context, isDark),
+                        _buildBar('Aug', 0.85, '31', context, isDark),
+                        _buildBar('Sep', 0.9, '35', context, isDark),
+                        _buildBar('Oct', 1.0, '48', context, isDark, isHighlight: true),
                       ],
                     ),
                   ),
@@ -174,18 +198,18 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Trade Volume by Country', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
-                      Text('48 Deals Total', style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+                      Text('Trade Volume by Country', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: context.textPrimary)),
+                      Text('48 Deals Total', style: TextStyle(fontSize: 11, color: context.textSecondary)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -196,9 +220,9 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
                         width: 100,
                         height: 100,
                         child: CustomPaint(
-                          painter: _CountryDonutPainter(),
-                          child: const Center(
-                            child: Icon(Icons.public, color: AppColors.deepNavy, size: 28),
+                          painter: _CountryDonutPainter(isDark: isDark),
+                          child: Center(
+                            child: Icon(Icons.public, color: isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy, size: 28),
                           ),
                         ),
                       ),
@@ -207,13 +231,13 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
                       Expanded(
                         child: Column(
                           children: [
-                            _buildCountryRow('UAE (Dubai)', '38%', AppColors.deepNavy),
+                            _buildCountryRow('UAE (Dubai)', '38%', isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy, context, isDark),
                             const SizedBox(height: 6),
-                            _buildCountryRow('China (Shenzhen)', '26%', AppColors.tradeTeal),
+                            _buildCountryRow('China (Shenzhen)', '26%', AppColors.tradeTeal, context, isDark),
                             const SizedBox(height: 6),
-                            _buildCountryRow('Germany (Hamburg)', '20%', AppColors.gold),
+                            _buildCountryRow('Germany (Hamburg)', '20%', AppColors.gold, context, isDark),
                             const SizedBox(height: 6),
-                            _buildCountryRow('Others (KSA, Turkey)', '16%', AppColors.oceanBlue),
+                            _buildCountryRow('Others (KSA, Turkey)', '16%', AppColors.oceanBlue, context, isDark),
                           ],
                         ),
                       ),
@@ -227,7 +251,8 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             ElevatedButton.icon(
               onPressed: _exportAnalytics,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: isDark ? AppColors.tradeTeal : AppColors.deepNavy,
+                foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -240,7 +265,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
     );
   }
 
-  Widget _buildPeriodTab(String period) {
+  Widget _buildPeriodTab(String period, bool isDark) {
     final isSelected = _selectedPeriod == period;
     return Expanded(
       child: GestureDetector(
@@ -248,7 +273,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? (isDark ? AppColors.cardDark : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           child: Text(
@@ -257,7 +282,9 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.deepNavy : AppColors.textSecondaryLight,
+              color: isSelected
+                  ? (isDark ? Colors.white : AppColors.deepNavy)
+                  : (isDark ? const Color(0xFF94A3B8) : AppColors.textSecondaryLight),
             ),
           ),
         ),
@@ -265,13 +292,13 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
     );
   }
 
-  Widget _buildMetricTile(String label, String value, String sub, IconData icon, Color color) {
+  Widget _buildMetricTile(String label, String value, String sub, IconData icon, Color color, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +306,7 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight)),
+              Text(label, style: TextStyle(fontSize: 11, color: context.textSecondary)),
               Icon(icon, color: color, size: 18),
             ],
           ),
@@ -292,39 +319,58 @@ class _ReportsAnalyticsScreenState extends State<ReportsAnalyticsScreen> {
     );
   }
 
-  Widget _buildBar(String month, double factor, String value, {bool isHighlight = false}) {
+  Widget _buildBar(String month, double factor, String value, BuildContext context, bool isDark, {bool isHighlight = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(value, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isHighlight ? AppColors.tradeTeal : AppColors.textSecondaryLight)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: isHighlight ? AppColors.tradeTeal : context.textSecondary,
+          ),
+        ),
         const SizedBox(height: 4),
         Container(
           width: 26,
           height: 70 * factor,
           decoration: BoxDecoration(
-            color: isHighlight ? AppColors.tradeTeal : const Color(0xFFCBD5E1),
+            color: isHighlight
+                ? AppColors.tradeTeal
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
           ),
         ),
         const SizedBox(height: 4),
-        Text(month, style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, fontWeight: FontWeight.w600)),
+        Text(month, style: TextStyle(fontSize: 11, color: context.textPrimary, fontWeight: FontWeight.w600)),
       ],
     );
   }
 
-  Widget _buildCountryRow(String country, String pct, Color color) {
+  Widget _buildCountryRow(String country, String pct, Color color, BuildContext context, bool isDark) {
     return Row(
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Expanded(child: Text(country, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
-        Text(pct, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.deepNavy)),
+        Expanded(child: Text(country, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.textPrimary))),
+        Text(
+          pct,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy,
+          ),
+        ),
       ],
     );
   }
 }
 
 class _CountryDonutPainter extends CustomPainter {
+  final bool isDark;
+  _CountryDonutPainter({this.isDark = false});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -334,7 +380,7 @@ class _CountryDonutPainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
     final paints = [
-      Paint()..color = AppColors.deepNavy..style = PaintingStyle.stroke..strokeWidth = strokeWidth,
+      Paint()..color = (isDark ? const Color(0xFF38BDF8) : AppColors.deepNavy)..style = PaintingStyle.stroke..strokeWidth = strokeWidth,
       Paint()..color = AppColors.tradeTeal..style = PaintingStyle.stroke..strokeWidth = strokeWidth,
       Paint()..color = AppColors.gold..style = PaintingStyle.stroke..strokeWidth = strokeWidth,
       Paint()..color = AppColors.oceanBlue..style = PaintingStyle.stroke..strokeWidth = strokeWidth,
